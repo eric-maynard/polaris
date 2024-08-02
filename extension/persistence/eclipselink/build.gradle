@@ -24,4 +24,6 @@ dependencies {
 
     testImplementation(libs.h2)
     testImplementation(testFixtures(project(":polaris-core")))
+
+    implementation("org.postgresql:postgresql:42.3.1")
 }

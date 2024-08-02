@@ -81,7 +81,9 @@ public abstract class LocalPolarisMetaStoreManagerFactory<StoreType>
         initializeForRealm(realmContext);
         PolarisMetaStoreManager.PrincipalSecretsResult secretsResult =
             bootstrapServiceAndCreatePolarisPrincipalForRealm(
-                realmContext, metaStoreManagerMap.get(realmContext.getRealmIdentifier()), overwrite);
+                realmContext,
+                metaStoreManagerMap.get(realmContext.getRealmIdentifier()),
+                overwrite);
         results.put(realmContext.getRealmIdentifier(), secretsResult);
       }
     }
@@ -139,9 +141,7 @@ public abstract class LocalPolarisMetaStoreManagerFactory<StoreType>
    */
   private PolarisMetaStoreManager.PrincipalSecretsResult
       bootstrapServiceAndCreatePolarisPrincipalForRealm(
-          RealmContext realmContext,
-          PolarisMetaStoreManager metaStoreManager,
-          boolean overwrite) {
+          RealmContext realmContext, PolarisMetaStoreManager metaStoreManager, boolean overwrite) {
     // While bootstrapping we need to act as a fake privileged context since the real
     // CallContext hasn't even been resolved yet.
     PolarisCallContext polarisContext =
@@ -158,12 +158,11 @@ public abstract class LocalPolarisMetaStoreManagerFactory<StoreType>
               PolarisEntitySubType.NULL_SUBTYPE,
               PolarisEntityConstants.getRootPrincipalName());
       if (preliminaryRootPrincipalLookup.isSuccess()) {
-        String overrideMessage = "It appears this metastore manager has already been bootstrapped." +
-            " To continue bootstrapping and purge any existing Polaris entities from the metastore manager, please" +
-            " re-run this command with the flag `--overwrite`.";
-        logger.error(
-            "\n\n {} \n\n",
-            overrideMessage);
+        String overrideMessage =
+            "It appears this metastore manager has already been bootstrapped."
+                + " To continue bootstrapping and purge any existing Polaris entities from the metastore manager, please"
+                + " re-run this command with the flag `--overwrite`.";
+        logger.error("\n\n {} \n\n", overrideMessage);
         throw new IllegalArgumentException(overrideMessage);
       }
     }
