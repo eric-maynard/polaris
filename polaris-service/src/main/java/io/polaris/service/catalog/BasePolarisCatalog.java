@@ -951,8 +951,7 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
                     .getConfigurationStore()
                     .getConfiguration(
                         getCurrentPolarisContext(),
-                        PolarisConfiguration.ALLOW_TABLE_LOCATION_OVERLAP,
-                        PolarisConfiguration.DEFAULT_ALLOW_TABLE_LOCATION_OVERLAP)));
+                        PolarisConfiguration.ALLOW_TABLE_LOCATION_OVERLAP)));
     if (allowLocalTableLocationOverlap) {
       LOG.debug("Skipping location overlap validation for identifier '{}'", identifier);
     } else { // if (entity.getSubType().equals(PolarisEntitySubType.TABLE)) {
