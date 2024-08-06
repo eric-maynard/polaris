@@ -431,15 +431,12 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
             .setBaseLocation(baseLocation)
             .build();
     boolean allowNamespaceLocationOverlap =
-        Boolean.parseBoolean(
-            String.valueOf(
-                callContext
-                    .getPolarisCallContext()
-                    .getConfigurationStore()
-                    .getConfiguration(
-                        callContext.getPolarisCallContext(),
-                        PolarisConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP,
-                        PolarisConfiguration.DEFAULT_ALLOW_NAMESPACE_LOCATION_OVERLAP)));
+        callContext
+            .getPolarisCallContext()
+            .getConfigurationStore()
+            .getConfiguration(
+                callContext.getPolarisCallContext(),
+                PolarisConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP);
     if (!allowNamespaceLocationOverlap) {
       LOG.debug("Validating no overlap for {} with sibling tables or namespaces", namespace);
       validateNoLocationOverlap(
@@ -589,8 +586,7 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
         .getConfigurationStore()
         .getConfiguration(
             callContext.getPolarisCallContext(),
-            PolarisConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP,
-            PolarisConfiguration.DEFAULT_ALLOW_NAMESPACE_LOCATION_OVERLAP)) {
+            PolarisConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP)) {
       LOG.debug("Validating no overlap with sibling tables or namespaces");
       validateNoLocationOverlap(
           NamespaceEntity.of(updatedEntity).getBaseLocation(),
@@ -859,15 +855,11 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
       String location,
       PolarisResolvedPathWrapper resolvedStorageEntity) {
     boolean enforceTableLocationsInsideNamespaceLocations =
-        Boolean.parseBoolean(
-            String.valueOf(
-                getCurrentPolarisContext()
-                    .getConfigurationStore()
-                    .getConfiguration(
-                        getCurrentPolarisContext(),
-                        PolarisConfiguration.ENFORCE_TABLE_LOCATIONS_INSIDE_NAMESPACE_LOCATIONS,
-                        PolarisConfiguration
-                            .DEFAULT_ENFORCE_TABLE_LOCATIONS_INSIDE_NAMESPACE_LOCATIONS)));
+        getCurrentPolarisContext()
+            .getConfigurationStore()
+            .getConfiguration(
+                getCurrentPolarisContext(),
+                PolarisConfiguration.ENFORCE_TABLE_LOCATIONS_INSIDE_NAMESPACE_LOCATIONS);
 
     Optional<PolarisStorageConfigurationInfo> optStorageConfiguration = Optional.empty();
     if (enforceTableLocationsInsideNamespaceLocations) {
@@ -1311,8 +1303,7 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
             .getConfigurationStore()
             .getConfiguration(
                 polarisCallContext,
-                PolarisConfiguration.ALLOW_EXTERNAL_METADATA_FILE_LOCATION,
-                PolarisConfiguration.DEFAULT_ALLOW_EXTERNAL_METADATA_FILE_LOCATION)) {
+                PolarisConfiguration.ALLOW_EXTERNAL_METADATA_FILE_LOCATION)) {
       LOG.debug(
           "Validating base location {} for table {} in metadata file {}",
           metadata.location(),
@@ -1706,14 +1697,11 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
     List<PolarisEntity> catalogPath = resolvedParent.getRawFullPath();
 
     boolean enforceGloballyUniqueTableLocation =
-        Boolean.parseBoolean(
-            String.valueOf(
-                getCurrentPolarisContext()
-                    .getConfigurationStore()
-                    .getConfiguration(
-                        getCurrentPolarisContext(),
-                        PolarisConfiguration.ENFORCE_GLOBALLY_UNIQUE_TABLE_LOCATIONS,
-                        PolarisConfiguration.DEFAULT_ENFORCE_GLOBALLY_UNIQUE_TABLE_LOCATIONS)));
+        getCurrentPolarisContext()
+            .getConfigurationStore()
+            .getConfiguration(
+                getCurrentPolarisContext(),
+                PolarisConfiguration.ENFORCE_GLOBALLY_UNIQUE_TABLE_LOCATIONS);
 
     if (enforceGloballyUniqueTableLocation) {
       if (entityManager
