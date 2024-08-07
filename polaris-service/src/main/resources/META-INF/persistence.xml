@@ -32,9 +32,9 @@
     <shared-cache-mode>NONE</shared-cache-mode>
     <properties>
       <property name="jakarta.persistence.jdbc.url"
-        value="jdbc:postgresql://.../db"/>
-      <property name="jakarta.persistence.jdbc.user" value="postgres"/>
-      <property name="jakarta.persistence.jdbc.password" value="polaris-dev"/>
+        value="jdbc:postgresql://localhost:5432/db"/>
+      <property name="jakarta.persistence.jdbc.user" value="polaris"/>
+      <property name="jakarta.persistence.jdbc.password" value="test"/>
 
       <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
       <property name="eclipselink.logging.level.sql" value="FINE"/>
@@ -45,16 +45,22 @@
       <property name="jakarta.persistence.query.timeout" value="60000"/>
 
       <!-- Apache DBCP -->
-      <property name="javax.persistence.jdbc.pool"
-        value="org.apache.commons.dbcp2.BasicDataSource"/>
+      <property name="eclipselink.jdbc.connections.datasource"
+                value="org.apache.commons.dbcp2.BasicDataSource"/>
       <property name="javax.persistence.jdbc.pool.minIdle" value="8"/>
-      <property name="javax.persistence.jdbc.pool.maxTotal" value="32"/>
-      <property name="javax.persistence.jdbc.pool.maxIdle" value="16"/>
+      <property name="javax.persistence.jdbc.pool.maxTotal" value="100"/>
+      <property name="javax.persistence.jdbc.pool.maxIdle" value="100"/>
       <property name="javax.persistence.jdbc.pool.testOnBorrow" value="true"/>
       <property name="javax.persistence.jdbc.pool.validationQuery" value="SELECT 1"/>
       <property name="javax.persistence.jdbc.pool.timeBetweenEvictionRunsMillis"
         value="30000"/>
       <property name="javax.persistence.jdbc.pool.minEvictableIdleTimeMillis" value="60000"/>
+
+      <!-- Other connection pool settings -->
+      <property name="eclipselink.connection-pool.default.min" value="8"/>
+      <property name="eclipselink.connection-pool.default.max" value="100"/>
+      <property name="eclipselink.jdbc.connections.min" value="8"/>
+      <property name="eclipselink.jdbc.connections.max" value="100"/>
     </properties>
   </persistence-unit>
 </persistence>
