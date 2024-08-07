@@ -31,9 +31,14 @@ import io.polaris.core.persistence.models.ModelEntityDropped;
 import io.polaris.core.persistence.models.ModelGrantRecord;
 import io.polaris.core.persistence.models.ModelPrincipalSecrets;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,6 +51,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PolarisEclipseLinkStore {
   private static final Logger LOG = LoggerFactory.getLogger(PolarisEclipseLinkStore.class);
+  private static final String TIMEOUT_PARAMETER = "jakarta.persistence.query.timeout";
 
   // diagnostic services
   private final PolarisDiagnostics diagnosticServices;
@@ -57,6 +63,34 @@ public class PolarisEclipseLinkStore {
    */
   public PolarisEclipseLinkStore(@NotNull PolarisDiagnostics diagnostics) {
     this.diagnosticServices = diagnostics;
+  }
+
+  private Optional<Long> getTimeoutMs(EntityManager entityManager) {
+    Map<String, Object> properties = entityManager.getEntityManagerFactory().getProperties();
+    if (properties.containsKey(TIMEOUT_PARAMETER)) {
+      return Optional.of(Long.parseLong(String.valueOf(properties.get(TIMEOUT_PARAMETER))));
+    }
+    return Optional.empty();
+  }
+
+  private Query createQuery(EntityManager entityManager, String queryString) {
+    Query query = entityManager
+        .createQuery(queryString);
+    Optional<Long> timeout = getTimeoutMs(entityManager);
+    if (timeout.isPresent()) {
+      query.setHint(TIMEOUT_PARAMETER, timeout.get());
+    }
+    return query;
+  }
+
+  private <T> TypedQuery<T> createQuery(EntityManager entityManager, String queryString, Class<T> typ) {
+    TypedQuery<T> query = entityManager
+        .createQuery(queryString, typ);
+    Optional<Long> timeout = getTimeoutMs(entityManager);
+    if (timeout.isPresent()) {
+      query.setHint(TIMEOUT_PARAMETER, timeout.get());
+    }
+    return query;
   }
 
   long getNextSequence(EntityManager session) {
@@ -188,12 +222,12 @@ public class PolarisEclipseLinkStore {
   void deleteAll(EntityManager session) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    session.createQuery("DELETE from ModelEntity").executeUpdate();
-    session.createQuery("DELETE from ModelEntityActive").executeUpdate();
-    session.createQuery("DELETE from ModelEntityDropped").executeUpdate();
-    session.createQuery("DELETE from ModelEntityChangeTracking").executeUpdate();
-    session.createQuery("DELETE from ModelGrantRecord").executeUpdate();
-    session.createQuery("DELETE from ModelPrincipalSecrets").executeUpdate();
+    createQuery(session, "DELETE from ModelEntity").executeUpdate();
+    createQuery(session, "DELETE from ModelEntityActive").executeUpdate();
+    createQuery(session, "DELETE from ModelEntityDropped").executeUpdate();
+    createQuery(session, "DELETE from ModelEntityChangeTracking").executeUpdate();
+    createQuery(session, "DELETE from ModelGrantRecord").executeUpdate();
+    createQuery(session, "DELETE from ModelPrincipalSecrets").executeUpdate();
 
     LOG.debug("All entities deleted.");
   }
@@ -201,8 +235,8 @@ public class PolarisEclipseLinkStore {
   ModelEntity lookupEntity(EntityManager session, long catalogId, long entityId) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelEntity m where m.catalogId=:catalogId and m.id=:id",
             ModelEntity.class)
         .setParameter("catalogId", catalogId)
@@ -225,15 +259,19 @@ public class PolarisEclipseLinkStore {
             .collect(Collectors.joining(","));
 
     String hql = "SELECT * from ENTITIES m where (m.catalogId, m.id) in (" + inClause + ")";
-    return (List<ModelEntity>) session.createNativeQuery(hql, ModelEntity.class).getResultList();
+    Query query = session.createNativeQuery(hql, ModelEntity.class);
+    if (getTimeoutMs(session).isPresent()) {
+      query.setHint(TIMEOUT_PARAMETER, getTimeoutMs(session).get());
+    }
+    return (List<ModelEntity>) query.getResultList();
   }
 
   ModelEntityActive lookupEntityActive(
       EntityManager session, PolarisEntitiesActiveKey entityActiveKey) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelEntityActive m where m.catalogId=:catalogId and m.parentId=:parentId and m.typeCode=:typeCode and m.name=:name",
             ModelEntityActive.class)
         .setParameter("catalogId", entityActiveKey.getCatalogId())
@@ -259,8 +297,10 @@ public class PolarisEclipseLinkStore {
     }
 
     TypedQuery<Long> query =
-        session
-            .createQuery(hql, Long.class)
+        createQuery(
+          session,
+          hql,
+          Long.class)
             .setParameter("catalogId", catalogId)
             .setParameter("parentId", parentId);
     if (entityType != null) {
@@ -279,8 +319,10 @@ public class PolarisEclipseLinkStore {
         "SELECT m from ModelEntity m where m.catalogId=:catalogId and m.parentId=:parentId and m.typeCode=:typeCode";
 
     TypedQuery<ModelEntity> query =
-        session
-            .createQuery(hql, ModelEntity.class)
+        createQuery(
+            session,
+            hql,
+            ModelEntity.class)
             .setParameter("catalogId", catalogId)
             .setParameter("parentId", parentId)
             .setParameter("typeCode", entityType.getCode());
@@ -291,8 +333,8 @@ public class PolarisEclipseLinkStore {
   ModelEntityDropped lookupEntityDropped(EntityManager session, long catalogId, long entityId) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelEntityDropped m where m.catalogId=:catalogId and m.id=:id",
             ModelEntityDropped.class)
         .setParameter("catalogId", catalogId)
@@ -306,8 +348,8 @@ public class PolarisEclipseLinkStore {
       EntityManager session, long catalogId, long entityId) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelEntityChangeTracking m where m.catalogId=:catalogId and m.id=:id",
             ModelEntityChangeTracking.class)
         .setParameter("catalogId", catalogId)
@@ -326,8 +368,8 @@ public class PolarisEclipseLinkStore {
       int privilegeCode) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelGrantRecord m where m.securableCatalogId=:securableCatalogId "
                 + "and m.securableId=:securableId "
                 + "and m.granteeCatalogId=:granteeCatalogId "
@@ -348,8 +390,8 @@ public class PolarisEclipseLinkStore {
       EntityManager session, long securableCatalogId, long securableId) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelGrantRecord m "
                 + "where m.securableCatalogId=:securableCatalogId "
                 + "and m.securableId=:securableId",
@@ -363,8 +405,8 @@ public class PolarisEclipseLinkStore {
       EntityManager session, long granteeCatalogId, long granteeId) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelGrantRecord m "
                 + "where m.granteeCatalogId=:granteeCatalogId "
                 + "and m.granteeId=:granteeId",
@@ -377,8 +419,8 @@ public class PolarisEclipseLinkStore {
   ModelPrincipalSecrets lookupPrincipalSecrets(EntityManager session, String clientId) {
     diagnosticServices.check(session != null, "session_is_null");
 
-    return session
-        .createQuery(
+    return createQuery(
+            session,
             "SELECT m from ModelPrincipalSecrets m where m.principalClientId=:clientId",
             ModelPrincipalSecrets.class)
         .setParameter("clientId", clientId)
