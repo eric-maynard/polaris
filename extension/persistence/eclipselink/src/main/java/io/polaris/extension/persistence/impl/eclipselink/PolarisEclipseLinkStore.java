@@ -37,8 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -74,8 +72,7 @@ public class PolarisEclipseLinkStore {
   }
 
   private Query createQuery(EntityManager entityManager, String queryString) {
-    Query query = entityManager
-        .createQuery(queryString);
+    Query query = entityManager.createQuery(queryString);
     Optional<Long> timeout = getTimeoutMs(entityManager);
     if (timeout.isPresent()) {
       query.setHint(TIMEOUT_PARAMETER, timeout.get());
@@ -83,9 +80,9 @@ public class PolarisEclipseLinkStore {
     return query;
   }
 
-  private <T> TypedQuery<T> createQuery(EntityManager entityManager, String queryString, Class<T> typ) {
-    TypedQuery<T> query = entityManager
-        .createQuery(queryString, typ);
+  private <T> TypedQuery<T> createQuery(
+      EntityManager entityManager, String queryString, Class<T> typ) {
+    TypedQuery<T> query = entityManager.createQuery(queryString, typ);
     Optional<Long> timeout = getTimeoutMs(entityManager);
     if (timeout.isPresent()) {
       query.setHint(TIMEOUT_PARAMETER, timeout.get());
@@ -297,10 +294,7 @@ public class PolarisEclipseLinkStore {
     }
 
     TypedQuery<Long> query =
-        createQuery(
-          session,
-          hql,
-          Long.class)
+        createQuery(session, hql, Long.class)
             .setParameter("catalogId", catalogId)
             .setParameter("parentId", parentId);
     if (entityType != null) {
@@ -319,10 +313,7 @@ public class PolarisEclipseLinkStore {
         "SELECT m from ModelEntity m where m.catalogId=:catalogId and m.parentId=:parentId and m.typeCode=:typeCode";
 
     TypedQuery<ModelEntity> query =
-        createQuery(
-            session,
-            hql,
-            ModelEntity.class)
+        createQuery(session, hql, ModelEntity.class)
             .setParameter("catalogId", catalogId)
             .setParameter("parentId", parentId)
             .setParameter("typeCode", entityType.getCode());

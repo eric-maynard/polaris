@@ -41,8 +41,18 @@
       <property name="eclipselink.logging.parameters" value="true"/>
       <property name="eclipselink.persistence-context.flush-mode" value="auto"/>
 
-      <!-- Timeout in ms: -->
+      <!-- Query timeout in ms: -->
       <property name="jakarta.persistence.query.timeout" value="60000"/>
+
+      <!-- Apache DBCP -->
+      <property name="javax.persistence.jdbc.pool" value="org.apache.commons.dbcp2.BasicDataSource"/>
+      <property name="javax.persistence.jdbc.pool.minIdle" value="8"/>
+      <property name="javax.persistence.jdbc.pool.maxTotal" value="32"/>
+      <property name="javax.persistence.jdbc.pool.maxIdle" value="16"/>
+      <property name="javax.persistence.jdbc.pool.testOnBorrow" value="true"/>
+      <property name="javax.persistence.jdbc.pool.validationQuery" value="SELECT 1"/>
+      <property name="javax.persistence.jdbc.pool.timeBetweenEvictionRunsMillis" value="30000"/>
+      <property name="javax.persistence.jdbc.pool.minEvictableIdleTimeMillis" value="60000"/>
     </properties>
   </persistence-unit>
 </persistence>
