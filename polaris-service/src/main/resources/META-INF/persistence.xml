@@ -40,6 +40,9 @@
       <property name="eclipselink.logging.level.sql" value="FINE"/>
       <property name="eclipselink.logging.parameters" value="true"/>
       <property name="eclipselink.persistence-context.flush-mode" value="auto"/>
+
+      <!-- Timeout in ms: -->
+      <property name="jakarta.persistence.query.timeout" value="60000"/>
     </properties>
   </persistence-unit>
 </persistence>
