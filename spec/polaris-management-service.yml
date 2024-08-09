@@ -117,8 +117,15 @@ paths:
 
     delete:
       operationId: deleteCatalog
-      description: Delete an existing catalog. This is a cascading operation that deletes all metadata, including principals,
-        roles and grants. If the catalog is an internal catalog, all tables and namespaces are dropped without purge.
+      description: Delete an existing catalog. If the `cascade` parameter is true, this is a cascading operation 
+                   that deletes all tables and namespaces inside the catalog without purge.
+      parameters:
+        - name: cascade
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: If true, drop all entities inside the catalog
       responses:
         204:
           description: "Success, no content"

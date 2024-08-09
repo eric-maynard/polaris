@@ -132,7 +132,6 @@ public class PolarisServiceImpl
   }
 
   /** From PolarisCatalogsApiService */
-  @Override
   public Response deleteCatalog(String catalogName, SecurityContext securityContext) {
     PolarisAdminService adminService = newAdminService(securityContext);
     adminService.deleteCatalog(catalogName);
