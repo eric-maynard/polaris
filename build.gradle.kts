@@ -79,7 +79,7 @@ tasks.named<RatTask>("rat").configure {
     includes.clear()
     includes.addAll(trackedFiles)
   } else {
-    println("The `git` command-line interface is not available, checking all files in ${rootDir.absolutePath} ")
+    println("The `git` command-line interface is not available, checking all files in ${rootDir.absolutePath}")
   }
 
   // These are Gradle file pattern syntax
