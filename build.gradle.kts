@@ -17,7 +17,9 @@
  * under the License.
  */
 
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.nosphere.apache.rat.RatTask
+import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -58,17 +60,29 @@ if (System.getProperty("idea.sync.active").toBoolean()) {
 eclipse { project { name = ideName } }
 
 tasks.named<RatTask>("rat").configure {
-  // Ignore everything in .gitignore
-  val gitignorePath = Paths.get(rootDir.absolutePath, ".gitignore")
-  println("Loading .gitignore from: ${gitignorePath.toFile().toString()}")
-  if (Files.exists(gitignorePath)) {
-    val gitignorePatterns = Files.readAllLines(gitignorePath)
-      .filter { it.isNotEmpty() && !it.startsWith("#") }
-      .map { it.trim() }
-    gitignorePatterns.forEach { pattern ->
-      println("Adding exclude for pattern: $pattern")
-      excludes.add(pattern)
+  // Check if `git` is available on the command line
+  val isGitAvailable = try {
+    exec {
+      commandLine = listOf("git", "--version")
+      isIgnoreExitValue = true
+    }.exitValue == 0
+  } catch (e: Exception) {
+    false
+  }
+
+  // If `git` is available, only check RAT against tracked files
+  if (isGitAvailable) {
+    val output = ByteArrayOutputStream()
+    exec {
+      commandLine = listOf("git", "ls-files")
+      standardOutput = output
     }
+    val trackedFiles = output.toString("UTF-8").split("\n").filter { it.isNotBlank() }
+
+    includes.clear()
+    includes.addAll(trackedFiles)
+  } else {
+    println("The `git` command-line interface is not available, checking all files in ${rootDir.absolutePath} ")
   }
 
   // These are Gradle file pattern syntax
