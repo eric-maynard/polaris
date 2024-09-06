@@ -17,11 +17,8 @@
  * under the License.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
 import org.nosphere.apache.rat.RatTask
 import java.io.ByteArrayOutputStream
-import java.nio.file.Files
-import java.nio.file.Paths
 
 buildscript {
   repositories { maven { url = java.net.URI("https://plugins.gradle.org/m2/") } }
