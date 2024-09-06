@@ -18,6 +18,8 @@
  */
 
 import org.nosphere.apache.rat.RatTask
+import java.nio.file.Files
+import java.nio.file.Paths
 
 buildscript {
   repositories { maven { url = java.net.URI("https://plugins.gradle.org/m2/") } }
@@ -56,6 +58,19 @@ if (System.getProperty("idea.sync.active").toBoolean()) {
 eclipse { project { name = ideName } }
 
 tasks.named<RatTask>("rat").configure {
+  // Ignore everything in .gitignore
+  val gitignorePath = Paths.get(rootDir.absolutePath, ".gitignore")
+  println("Loading .gitignore from: ${gitignorePath.toFile().toString()}")
+  if (Files.exists(gitignorePath)) {
+    val gitignorePatterns = Files.readAllLines(gitignorePath)
+      .filter { it.isNotEmpty() && !it.startsWith("#") }
+      .map { it.trim() }
+    gitignorePatterns.forEach { pattern ->
+      println("Adding exclude for pattern: $pattern")
+      excludes.add(pattern)
+    }
+  }
+
   // These are Gradle file pattern syntax
   excludes.add("**/build/**")
 
