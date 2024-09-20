@@ -24,6 +24,7 @@ import io.dropwizard.core.Configuration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.polaris.core.PolarisConfigurationStore;
 import org.apache.polaris.core.auth.AuthenticatedPolarisPrincipal;
@@ -31,14 +32,11 @@ import org.apache.polaris.core.persistence.MetaStoreManagerFactory;
 import org.apache.polaris.service.auth.DiscoverableAuthenticator;
 import org.apache.polaris.service.catalog.FileIOFactory;
 import org.apache.polaris.service.context.CallContextResolver;
-import org.apache.polaris.service.context.DefaultContextResolver;
 import org.apache.polaris.service.context.RealmContextResolver;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Configuration specific to a Polaris REST Service. Place these entries in a YML file for them to
@@ -46,16 +44,14 @@ import javax.validation.constraints.NotNull;
  */
 public class PolarisApplicationConfig extends Configuration {
 
-  @NotNull
-  private MetaStoreManagerFactory metaStoreManagerFactory;
-  @NotNull
-  private RealmContextResolver realmContextResolver;
-  @NotNull
-  private CallContextResolver callContextResolver;
+  @NotNull private MetaStoreManagerFactory metaStoreManagerFactory;
+  @NotNull private RealmContextResolver realmContextResolver;
+  @NotNull private CallContextResolver callContextResolver;
+
   @NotNull
   private DiscoverableAuthenticator<String, AuthenticatedPolarisPrincipal> polarisAuthenticator;
-  @NotNull
-  private FileIOFactory fileIOFactory;
+
+  @NotNull private FileIOFactory fileIOFactory;
 
   private CorsConfiguration corsConfiguration = new CorsConfiguration();
   private TaskHandlerConfiguration taskHandler = new TaskHandlerConfiguration();
