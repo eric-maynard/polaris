@@ -31,30 +31,41 @@ import org.apache.polaris.core.persistence.MetaStoreManagerFactory;
 import org.apache.polaris.service.auth.DiscoverableAuthenticator;
 import org.apache.polaris.service.catalog.FileIOFactory;
 import org.apache.polaris.service.context.CallContextResolver;
+import org.apache.polaris.service.context.DefaultContextResolver;
 import org.apache.polaris.service.context.RealmContextResolver;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Configuration specific to a Polaris REST Service. Place these entries in a YML file for them to
  * be picked up, i.e. `iceberg-rest-server.yml`
  */
 public class PolarisApplicationConfig extends Configuration {
+
+  @NotNull
   private MetaStoreManagerFactory metaStoreManagerFactory;
-  private String defaultRealm = "default-realm";
+  @NotNull
   private RealmContextResolver realmContextResolver;
+  @NotNull
   private CallContextResolver callContextResolver;
+  @NotNull
   private DiscoverableAuthenticator<String, AuthenticatedPolarisPrincipal> polarisAuthenticator;
+  @NotNull
+  private FileIOFactory fileIOFactory;
+
   private CorsConfiguration corsConfiguration = new CorsConfiguration();
   private TaskHandlerConfiguration taskHandler = new TaskHandlerConfiguration();
   private PolarisConfigurationStore configurationStore =
       new DefaultConfigurationStore(new HashMap<>());
-  private List<String> defaultRealms;
+  private String defaultRealm = "default-realm";
+  private List<String> defaultRealms = List.of(defaultRealm);
+
   private String awsAccessKey;
   private String awsSecretKey;
-  private FileIOFactory fileIOFactory;
 
   public static final long REQUEST_BODY_BYTES_NO_LIMIT = -1;
   private long maxRequestBodyBytes = REQUEST_BODY_BYTES_NO_LIMIT;
