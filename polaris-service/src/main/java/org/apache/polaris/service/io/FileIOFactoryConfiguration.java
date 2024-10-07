@@ -16,21 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.polaris.service.io;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.core.setup.Environment;
-
 import java.util.Map;
 
 public record FileIOFactoryConfiguration(
     @JsonProperty("factoryType") String factoryType,
     @JsonProperty("properties") Map<String, String> properties) {
 
-    public FileIOFactory getFileIOFactory() {
-        FileIOFactory fileIOFactory = FileIOFactory.loadFileIOFactory(factoryType);
-        fileIOFactory.setProperties(properties);
-        return fileIOFactory;
-    }
+  public FileIOFactory getFileIOFactory() {
+    FileIOFactory fileIOFactory = FileIOFactory.loadFileIOFactory(factoryType);
+    fileIOFactory.setProperties(properties);
+    return fileIOFactory;
+  }
 }

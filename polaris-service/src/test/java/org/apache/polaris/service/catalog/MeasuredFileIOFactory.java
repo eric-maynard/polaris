@@ -42,8 +42,9 @@ public class MeasuredFileIOFactory extends FileIOFactory {
   @Override
   public FileIO loadFileIO(String ioImpl, Map<String, String> properties) {
     MeasuredFileIO wrapped =
-        new MeasuredFileIO(CatalogUtil.loadFileIO(
-            ioImpl, mergeMaps(this.getProperties(), properties), new Configuration()));
+        new MeasuredFileIO(
+            CatalogUtil.loadFileIO(
+                ioImpl, mergeMaps(this.getProperties(), properties), new Configuration()));
     ios.add(wrapped);
     return wrapped;
   }

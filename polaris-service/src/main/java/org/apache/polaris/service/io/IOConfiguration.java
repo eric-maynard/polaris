@@ -16,34 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.polaris.service.io;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
 import java.util.List;
-import java.util.ServiceLoader;
 
 public record IOConfiguration(
     @JsonProperty("factoryType") String factoryType,
     @JsonProperty("factoryTypes") List<FileIOFactoryConfiguration> factoryTypes) {
 
-    /** Build the correct {@link FileIOFactory} given this configuration} */
-    public FileIOFactory buildFileIOFactory() {
-        if (factoryType == null && !hasFactoryTypes()) {
-            throw new IllegalArgumentException("Either factoryType or factoryTypes is required!");
-        } else if (factoryType != null && hasFactoryTypes()) {
-            throw new IllegalArgumentException("Both factoryType and factoryTypes were provided; choose one!");
-        } else if (!hasFactoryTypes()) {
-            return FileIOFactory.loadFileIOFactory(factoryType);
-        } else {
-            return new DelegatingFileIOFactory(
-                factoryTypes.stream().map(FileIOFactoryConfiguration::getFileIOFactory).toList());
-        }
+  /** Build the correct {@link FileIOFactory} given this configuration} */
+  public FileIOFactory buildFileIOFactory() {
+    if (factoryType == null && !hasFactoryTypes()) {
+      throw new IllegalArgumentException("Either factoryType or factoryTypes is required!");
+    } else if (factoryType != null && hasFactoryTypes()) {
+      throw new IllegalArgumentException(
+          "Both factoryType and factoryTypes were provided; choose one!");
+    } else if (!hasFactoryTypes()) {
+      return FileIOFactory.loadFileIOFactory(factoryType);
+    } else {
+      return new DelegatingFileIOFactory(
+          factoryTypes.stream().map(FileIOFactoryConfiguration::getFileIOFactory).toList());
     }
+  }
 
-    private boolean hasFactoryTypes() {
-        return factoryTypes != null && !factoryTypes.isEmpty();
-    }
+  private boolean hasFactoryTypes() {
+    return factoryTypes != null && !factoryTypes.isEmpty();
+  }
 }

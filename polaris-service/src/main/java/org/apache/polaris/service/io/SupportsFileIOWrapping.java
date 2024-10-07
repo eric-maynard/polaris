@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.polaris.service.io;
 
+import java.util.Map;
 import org.apache.iceberg.io.FileIO;
 
-import java.util.Map;
-
 /**
- * Interface for {@link FileIOFactory} implementations that can wrap a {@link FileIO} around another {@link FileIO}
+ * Interface for {@link FileIOFactory} implementations that can wrap a {@link FileIO} around another
+ * {@link FileIO}
  */
 public interface SupportsFileIOWrapping {
-    FileIO wrap(FileIO delegate, Map<String, String> properties);
+  FileIO wrap(FileIO delegate, Map<String, String> properties);
 }

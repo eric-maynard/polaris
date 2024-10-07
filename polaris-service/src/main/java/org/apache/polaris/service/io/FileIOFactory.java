@@ -21,16 +21,12 @@ package org.apache.polaris.service.io;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.dropwizard.jackson.Discoverable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
-
 import org.apache.iceberg.io.FileIO;
 
-/**
- * Interface for providing a way to construct FileIO objects, such as for reading/writing S3.
- */
+/** Interface for providing a way to construct FileIO objects, such as for reading/writing S3. */
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,

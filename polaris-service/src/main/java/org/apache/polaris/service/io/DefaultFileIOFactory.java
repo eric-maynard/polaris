@@ -29,6 +29,7 @@ import org.apache.iceberg.io.FileIO;
 public class DefaultFileIOFactory extends FileIOFactory {
   @Override
   public FileIO loadFileIO(String impl, Map<String, String> properties) {
-    return CatalogUtil.loadFileIO(impl, mergeMaps(this.getProperties(), properties), new Configuration());
+    return CatalogUtil.loadFileIO(
+        impl, mergeMaps(this.getProperties(), properties), new Configuration());
   }
 }

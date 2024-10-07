@@ -16,48 +16,50 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.polaris.service.io;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.iceberg.io.FileIO;
-
 import java.util.List;
 import java.util.Map;
+import org.apache.iceberg.io.FileIO;
 
-/** A FileIOFactory implementation that delegates to a list of other FileIOFactory implementations */
+/**
+ * A FileIOFactory implementation that delegates to a list of other FileIOFactory implementations
+ */
 @JsonTypeName("delegating")
 public class DelegatingFileIOFactory extends FileIOFactory {
-    private final List<FileIOFactory> factories;
+  private final List<FileIOFactory> factories;
 
-    public DelegatingFileIOFactory(List<FileIOFactory> factories) {
-        if (factories == null || factories.isEmpty()) {
-            throw new IllegalArgumentException("DelegatingFileIOFactory requires the `factories` parameter");
-        }
-        this.factories = factories;
+  public DelegatingFileIOFactory(List<FileIOFactory> factories) {
+    if (factories == null || factories.isEmpty()) {
+      throw new IllegalArgumentException(
+          "DelegatingFileIOFactory requires at least one FileIOFactory");
     }
+    this.factories = factories;
+  }
 
-    @Override
-    public FileIO loadFileIO(String impl, Map<String, String> properties) {
-        FileIOFactory tailFactory = factories.getLast();
-        List<SupportsFileIOWrapping> wrappers = factories
-            .subList(1, factories.size() - 1)
-            .reversed()
-            .stream()
-            .map(factory -> {
-                if (factory instanceof SupportsFileIOWrapping wrapper) {
+  @Override
+  public FileIO loadFileIO(String impl, Map<String, String> properties) {
+    FileIOFactory tailFactory = factories.getLast();
+    List<SupportsFileIOWrapping> wrappers =
+        factories.subList(1, factories.size() - 1).reversed().stream()
+            .map(
+                factory -> {
+                  if (factory instanceof SupportsFileIOWrapping wrapper) {
                     return wrapper;
-                } else {
-                    throw new IllegalArgumentException(String.format(
-                        "FileIOFactory %s does not support delegation", factory.getClass().getSimpleName()));
-                }
-            })
+                  } else {
+                    throw new IllegalArgumentException(
+                        String.format(
+                            "FileIOFactory %s does not support delegation",
+                            factory.getClass().getSimpleName()));
+                  }
+                })
             .toList();
 
-        FileIO fileIO = tailFactory.loadFileIO(impl, properties);
-        for (SupportsFileIOWrapping wrapper: wrappers) {
-            fileIO = wrapper.wrap(fileIO, properties);
-        }
-        return fileIO;
+    FileIO fileIO = tailFactory.loadFileIO(impl, properties);
+    for (SupportsFileIOWrapping wrapper : wrappers) {
+      fileIO = wrapper.wrap(fileIO, properties);
     }
+    return fileIO;
+  }
 }
