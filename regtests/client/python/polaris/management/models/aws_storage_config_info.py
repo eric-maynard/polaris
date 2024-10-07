@@ -1,21 +1,3 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
 # coding: utf-8
 
 """
@@ -29,6 +11,7 @@
     Do not edit the class manually.
 """  # noqa: E501
 
+
 from __future__ import annotations
 import pprint
 import re  # noqa: F401
@@ -40,18 +23,13 @@ from polaris.management.models.storage_config_info import StorageConfigInfo
 from typing import Optional, Set
 from typing_extensions import Self
 
-
 class AwsStorageConfigInfo(StorageConfigInfo):
     """
     aws storage configuration info
-    """  # noqa: E501
-    role_arn: StrictStr = Field(description="the aws role arn that grants privileges on the S3 buckets",
-                                alias="roleArn")
-    external_id: Optional[StrictStr] = Field(default=None,
-                                             description="an optional external id used to establish a trust relationship with AWS in the trust policy",
-                                             alias="externalId")
-    user_arn: Optional[StrictStr] = Field(default=None, description="the aws user arn used to assume the aws role",
-                                          alias="userArn")
+    """ # noqa: E501
+    role_arn: StrictStr = Field(description="the aws role arn that grants privileges on the S3 buckets", alias="roleArn")
+    external_id: Optional[StrictStr] = Field(default=None, description="an optional external id used to establish a trust relationship with AWS in the trust policy", alias="externalId")
+    user_arn: Optional[StrictStr] = Field(default=None, description="the aws user arn used to assume the aws role", alias="userArn")
     __properties: ClassVar[List[str]] = ["storageType", "allowedLocations"]
 
     model_config = ConfigDict(
@@ -59,6 +37,7 @@ class AwsStorageConfigInfo(StorageConfigInfo):
         validate_assignment=True,
         protected_namespaces=(),
     )
+
 
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""
@@ -105,7 +84,8 @@ class AwsStorageConfigInfo(StorageConfigInfo):
 
         _obj = cls.model_validate({
             "storageType": obj.get("storageType"),
-            "allowedLocations": obj.get("allowedLocations"),
-            "roleArn": obj.get("roleArn")
+            "allowedLocations": obj.get("allowedLocations")
         })
         return _obj
+
+

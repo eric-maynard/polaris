@@ -1,23 +1,3 @@
-<!--
-
- Licensed to the Apache Software Foundation (ASF) under one
- or more contributor license agreements.  See the NOTICE file
- distributed with this work for additional information
- regarding copyright ownership.  The ASF licenses this file
- to you under the Apache License, Version 2.0 (the
- "License"); you may not use this file except in compliance
- with the License.  You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- KIND, either express or implied.  See the License for the
- specific language governing permissions and limitations
- under the License.
-
--->
 # polaris.catalog.IcebergCatalogAPI
 
 All URIs are relative to *https://localhost*
@@ -1838,7 +1818,7 @@ with polaris.catalog.ApiClient(configuration) as api_client:
     prefix = 'prefix_example' # str | An optional prefix in the path
     namespace = 'accounting' # str | A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (`0x1F`) byte.
     table = 'sales' # str | A table name
-    notification_request = polaris.catalog.NotificationRequest() # NotificationRequest | The request containing the notification to be sent
+    notification_request = polaris.catalog.NotificationRequest() # NotificationRequest | The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS.
 
     try:
         # Sends a notification to the table
@@ -1857,7 +1837,7 @@ Name | Type | Description  | Notes
  **prefix** | **str**| An optional prefix in the path | 
  **namespace** | **str**| A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte. | 
  **table** | **str**| A table name | 
- **notification_request** | [**NotificationRequest**](NotificationRequest.md)| The request containing the notification to be sent | 
+ **notification_request** | [**NotificationRequest**](NotificationRequest.md)| The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS. | 
 
 ### Return type
 
@@ -1881,6 +1861,7 @@ void (empty response body)
 **401** | Unauthorized. Authentication is required and has failed or has not yet been provided. |  -  |
 **403** | Forbidden. Authenticated user does not have the necessary permissions. |  -  |
 **404** | Not Found - NoSuchTableException, table to load does not exist |  -  |
+**409** | Conflict - The timestamp of the received notification is older than or equal to the most recent timestamp Polaris has already processed for the specified table. |  -  |
 **419** | Credentials have timed out. If possible, the client should refresh credentials and retry. |  -  |
 **503** | The service is not ready to handle the request. The client should wait and retry.  The service may additionally send a Retry-After header to indicate when to retry. |  -  |
 **5XX** | A server-side problem that might not be addressable from the client side. Used for server 5xx errors without more specific documentation in individual routes. |  -  |

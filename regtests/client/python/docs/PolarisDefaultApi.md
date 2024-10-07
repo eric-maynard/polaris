@@ -1,23 +1,3 @@
-<!--
-
- Licensed to the Apache Software Foundation (ASF) under one
- or more contributor license agreements.  See the NOTICE file
- distributed with this work for additional information
- regarding copyright ownership.  The ASF licenses this file
- to you under the Apache License, Version 2.0 (the
- "License"); you may not use this file except in compliance
- with the License.  You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- KIND, either express or implied.  See the License for the
- specific language governing permissions and limitations
- under the License.
-
--->
 # polaris.management.PolarisDefaultApi
 
 All URIs are relative to *https://localhost/api/management/v1*
@@ -594,7 +574,7 @@ void (empty response body)
 
 
 
-Delete an existing catalog. This is a cascading operation that deletes all metadata, including principals, roles and grants. If the catalog is an internal catalog, all tables and namespaces are dropped without purge.
+Delete an existing catalog. The catalog must be empty.
 
 ### Example
 
@@ -1194,7 +1174,7 @@ Name | Type | Description  | Notes
 
 
 
-List the PrincipalRoles to whome the tagetcatalog role has been assigned
+List the PrincipalRoles to which the target catalog role has been assigned
 
 ### Example
 
@@ -1261,7 +1241,7 @@ Name | Type | Description  | Notes
 
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**200** | List the PrincipalRoles to whome the tagetcatalog role has been assigned |  -  |
+**200** | List the PrincipalRoles to which the target catalog role has been assigned |  -  |
 **403** | The caller does not have permission to list principal roles |  -  |
 **404** | The catalog or catalog role does not exist |  -  |
 

@@ -1,21 +1,3 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
 # coding: utf-8
 
 """
@@ -36,7 +18,7 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List
 from polaris.catalog.models.notification_type import NotificationType
 from polaris.catalog.models.table_update_notification import TableUpdateNotification
 from typing import Optional, Set
@@ -47,7 +29,7 @@ class NotificationRequest(BaseModel):
     NotificationRequest
     """ # noqa: E501
     notification_type: NotificationType = Field(alias="notification-type")
-    payload: Optional[TableUpdateNotification] = None
+    payload: TableUpdateNotification
     __properties: ClassVar[List[str]] = ["notification-type", "payload"]
 
     model_config = ConfigDict(

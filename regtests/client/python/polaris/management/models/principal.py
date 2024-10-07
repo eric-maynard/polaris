@@ -1,21 +1,3 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
 # coding: utf-8
 
 """
@@ -35,8 +17,9 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Annotated
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -44,13 +27,20 @@ class Principal(BaseModel):
     """
     A Polaris principal.
     """ # noqa: E501
-    name: StrictStr
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=256)]
     client_id: Optional[StrictStr] = Field(default=None, description="The output-only OAuth clientId associated with this principal if applicable", alias="clientId")
     properties: Optional[Dict[str, StrictStr]] = None
     create_timestamp: Optional[StrictInt] = Field(default=None, alias="createTimestamp")
     last_update_timestamp: Optional[StrictInt] = Field(default=None, alias="lastUpdateTimestamp")
     entity_version: Optional[StrictInt] = Field(default=None, description="The version of the principal object used to determine if the principal metadata has changed", alias="entityVersion")
     __properties: ClassVar[List[str]] = ["name", "clientId", "properties", "createTimestamp", "lastUpdateTimestamp", "entityVersion"]
+
+    @field_validator('name')
+    def name_validate_regular_expression(cls, value):
+        """Validates the regular expression"""
+        if not re.match(r"^(?!\s*[s|S][y|Y][s|S][t|T][e|E][m|M]\$).*$", value):
+            raise ValueError(r"must validate the regular expression /^(?!\s*[s|S][y|Y][s|S][t|T][e|E][m|M]\$).*$/")
+        return value
 
     model_config = ConfigDict(
         populate_by_name=True,

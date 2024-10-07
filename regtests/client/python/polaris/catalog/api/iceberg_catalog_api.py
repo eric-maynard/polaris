@@ -1,21 +1,3 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
 # coding: utf-8
 
 """
@@ -6194,7 +6176,7 @@ class IcebergCatalogAPI:
         prefix: Annotated[StrictStr, Field(description="An optional prefix in the path")],
         namespace: Annotated[StrictStr, Field(description="A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (`0x1F`) byte.")],
         table: Annotated[StrictStr, Field(description="A table name")],
-        notification_request: Annotated[NotificationRequest, Field(description="The request containing the notification to be sent")],
+        notification_request: Annotated[NotificationRequest, Field(description="The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS.")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -6217,7 +6199,7 @@ class IcebergCatalogAPI:
         :type namespace: str
         :param table: A table name (required)
         :type table: str
-        :param notification_request: The request containing the notification to be sent (required)
+        :param notification_request: The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS. (required)
         :type notification_request: NotificationRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -6258,6 +6240,7 @@ class IcebergCatalogAPI:
             '401': "IcebergErrorResponse",
             '403': "IcebergErrorResponse",
             '404': "IcebergErrorResponse",
+            '409': "IcebergErrorResponse",
             '419': "IcebergErrorResponse",
             '503': "IcebergErrorResponse",
             '5XX': "IcebergErrorResponse",
@@ -6279,7 +6262,7 @@ class IcebergCatalogAPI:
         prefix: Annotated[StrictStr, Field(description="An optional prefix in the path")],
         namespace: Annotated[StrictStr, Field(description="A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (`0x1F`) byte.")],
         table: Annotated[StrictStr, Field(description="A table name")],
-        notification_request: Annotated[NotificationRequest, Field(description="The request containing the notification to be sent")],
+        notification_request: Annotated[NotificationRequest, Field(description="The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS.")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -6302,7 +6285,7 @@ class IcebergCatalogAPI:
         :type namespace: str
         :param table: A table name (required)
         :type table: str
-        :param notification_request: The request containing the notification to be sent (required)
+        :param notification_request: The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS. (required)
         :type notification_request: NotificationRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -6343,6 +6326,7 @@ class IcebergCatalogAPI:
             '401': "IcebergErrorResponse",
             '403': "IcebergErrorResponse",
             '404': "IcebergErrorResponse",
+            '409': "IcebergErrorResponse",
             '419': "IcebergErrorResponse",
             '503': "IcebergErrorResponse",
             '5XX': "IcebergErrorResponse",
@@ -6364,7 +6348,7 @@ class IcebergCatalogAPI:
         prefix: Annotated[StrictStr, Field(description="An optional prefix in the path")],
         namespace: Annotated[StrictStr, Field(description="A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (`0x1F`) byte.")],
         table: Annotated[StrictStr, Field(description="A table name")],
-        notification_request: Annotated[NotificationRequest, Field(description="The request containing the notification to be sent")],
+        notification_request: Annotated[NotificationRequest, Field(description="The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS.")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -6387,7 +6371,7 @@ class IcebergCatalogAPI:
         :type namespace: str
         :param table: A table name (required)
         :type table: str
-        :param notification_request: The request containing the notification to be sent (required)
+        :param notification_request: The request containing the notification to be sent. For each table, Polaris will reject any notification where the timestamp in the request body is older than or equal to the most recent time Polaris has already processed for the table. The responsibility of ensuring the correct order of timestamps for a sequence of notifications lies with the caller of the API. This includes managing potential clock skew or inconsistencies when notifications are sent from multiple sources. A VALIDATE request behaves like a dry-run of a CREATE or UPDATE request up to but not including loading the contents of a metadata file; this includes validations of permissions, the specified metadata path being within ALLOWED_LOCATIONS, having an EXTERNAL catalog, etc. The intended use case for a VALIDATE notification is to allow a remote catalog to pre-validate the general settings of a receiving catalog against an intended new table location before possibly creating a table intended for sending notifcations in the remote catalog at all. For a VALIDATE request, the specified metadata-location can either be a prospective full metadata file path, or a relevant parent directory of the intended table to validate against ALLOWED_LOCATIONS. (required)
         :type notification_request: NotificationRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -6428,6 +6412,7 @@ class IcebergCatalogAPI:
             '401': "IcebergErrorResponse",
             '403': "IcebergErrorResponse",
             '404': "IcebergErrorResponse",
+            '409': "IcebergErrorResponse",
             '419': "IcebergErrorResponse",
             '503': "IcebergErrorResponse",
             '5XX': "IcebergErrorResponse",

@@ -1,23 +1,3 @@
-<!--
-
- Licensed to the Apache Software Foundation (ASF) under one
- or more contributor license agreements.  See the NOTICE file
- distributed with this work for additional information
- regarding copyright ownership.  The ASF licenses this file
- to you under the Apache License, Version 2.0 (the
- "License"); you may not use this file except in compliance
- with the License.  You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- KIND, either express or implied.  See the License for the
- specific language governing permissions and limitations
- under the License.
-
--->
 # polaris.catalog.IcebergOAuth2API
 
 All URIs are relative to *https://localhost*
@@ -28,7 +8,7 @@ Method | HTTP request | Description
 
 
 # **get_token**
-> OAuthTokenResponse get_token(grant_type=grant_type, scope=scope, client_id=client_id, client_secret=client_secret, requested_token_type=requested_token_type, subject_token=subject_token, subject_token_type=subject_token_type, actor_token=actor_token, actor_token_type=actor_token_type)
+> OAuthTokenResponse get_token(authorization=authorization, grant_type=grant_type, scope=scope, client_id=client_id, client_secret=client_secret, requested_token_type=requested_token_type, subject_token=subject_token, subject_token_type=subject_token_type, actor_token=actor_token, actor_token_type=actor_token_type)
 
 Get a token using an OAuth2 flow
 
@@ -65,6 +45,7 @@ configuration = polaris.catalog.Configuration(
 with polaris.catalog.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = polaris.catalog.IcebergOAuth2API(api_client)
+    authorization = 'authorization_example' # str |  (optional)
     grant_type = 'grant_type_example' # str |  (optional)
     scope = 'scope_example' # str |  (optional)
     client_id = 'client_id_example' # str | Client ID  This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header. (optional)
@@ -77,7 +58,7 @@ with polaris.catalog.ApiClient(configuration) as api_client:
 
     try:
         # Get a token using an OAuth2 flow
-        api_response = api_instance.get_token(grant_type=grant_type, scope=scope, client_id=client_id, client_secret=client_secret, requested_token_type=requested_token_type, subject_token=subject_token, subject_token_type=subject_token_type, actor_token=actor_token, actor_token_type=actor_token_type)
+        api_response = api_instance.get_token(authorization=authorization, grant_type=grant_type, scope=scope, client_id=client_id, client_secret=client_secret, requested_token_type=requested_token_type, subject_token=subject_token, subject_token_type=subject_token_type, actor_token=actor_token, actor_token_type=actor_token_type)
         print("The response of IcebergOAuth2API->get_token:\n")
         pprint(api_response)
     except Exception as e:
@@ -91,6 +72,7 @@ with polaris.catalog.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **authorization** | **str**|  | [optional] 
  **grant_type** | **str**|  | [optional] 
  **scope** | **str**|  | [optional] 
  **client_id** | **str**| Client ID  This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header. | [optional] 
