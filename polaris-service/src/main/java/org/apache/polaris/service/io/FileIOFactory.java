@@ -19,19 +19,37 @@
 package org.apache.polaris.service.io;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.dropwizard.jackson.Discoverable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
+
 import org.apache.iceberg.io.FileIO;
 
 /**
  * Interface for providing a way to construct FileIO objects, such as for reading/writing S3.
  */
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "factoryType")
 public abstract class FileIOFactory implements Discoverable {
   private Map<String, String> properties = new HashMap<>();
 
   public abstract FileIO loadFileIO(String impl, Map<String, String> properties);
+
+  static FileIOFactory loadFileIOFactory(String factoryType) {
+    ServiceLoader<FileIOFactory> loader = ServiceLoader.load(FileIOFactory.class);
+    for (FileIOFactory factory : loader) {
+      JsonTypeName typeNameAnnotation = factory.getClass().getAnnotation(JsonTypeName.class);
+      if (typeNameAnnotation != null && typeNameAnnotation.value().equalsIgnoreCase(factoryType)) {
+        return factory;
+      }
+    }
+    throw new IllegalArgumentException("No FileIOFactory found for type " + factoryType);
+  }
 
   public final void setProperties(Map<String, String> properties) {
     this.properties = properties;

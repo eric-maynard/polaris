@@ -19,18 +19,27 @@
 
 package org.apache.polaris.service.io;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
-public record IOConfiguration(FileIOFactory factoryType, List<FileIOFactory> factoryTypes) {
+import java.util.List;
+import java.util.ServiceLoader;
+
+public record IOConfiguration(
+    @JsonProperty("factoryType") String factoryType,
+    @JsonProperty("factoryTypes") List<FileIOFactoryConfiguration> factoryTypes) {
+
+    /** Build the correct {@link FileIOFactory} given this configuration} */
     public FileIOFactory buildFileIOFactory() {
         if (factoryType == null && !hasFactoryTypes()) {
             throw new IllegalArgumentException("Either factoryType or factoryTypes is required!");
         } else if (factoryType != null && hasFactoryTypes()) {
             throw new IllegalArgumentException("Both factoryType and factoryTypes were provided; choose one!");
         } else if (!hasFactoryTypes()) {
-            return factoryType;
+            return FileIOFactory.loadFileIOFactory(factoryType);
         } else {
-            return new DelegatingFileIOFactory(factoryTypes);
+            return new DelegatingFileIOFactory(
+                factoryTypes.stream().map(FileIOFactoryConfiguration::getFileIOFactory).toList());
         }
     }
 
