@@ -84,7 +84,7 @@ import org.apache.polaris.service.admin.api.PolarisCatalogsApi;
 import org.apache.polaris.service.admin.api.PolarisPrincipalRolesApi;
 import org.apache.polaris.service.admin.api.PolarisPrincipalsApi;
 import org.apache.polaris.service.auth.DiscoverableAuthenticator;
-import org.apache.polaris.service.catalog.FileIOFactory;
+import org.apache.polaris.service.io.FileIOFactory;
 import org.apache.polaris.service.catalog.IcebergCatalogAdapter;
 import org.apache.polaris.service.catalog.api.IcebergRestCatalogApi;
 import org.apache.polaris.service.catalog.api.IcebergRestConfigurationApi;
@@ -195,7 +195,7 @@ public class PolarisApplication extends Application<PolarisApplicationConfig> {
             "realmContext", new ContextResolverFilter(realmContextResolver, callContextResolver))
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
 
-    FileIOFactory fileIOFactory = configuration.getFileIOFactory();
+    FileIOFactory fileIOFactory = configuration.getIOConfiguration().buildFileIOFactory();
     if (fileIOFactory instanceof MetricRegistryAware mrAware) {
       mrAware.setMetricRegistry(polarisMetricRegistry);
     }

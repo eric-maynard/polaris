@@ -29,9 +29,10 @@ import org.apache.iceberg.ManifestFile;
 import org.apache.iceberg.io.FileIO;
 import org.apache.iceberg.io.InputFile;
 import org.apache.iceberg.io.OutputFile;
+import org.apache.polaris.service.io.FileIOFactory;
 
 /** A FileIOFactory that measures the number of bytes read, files written, and files deleted. */
-public class MeasuredFileIOFactory implements FileIOFactory {
+public class MeasuredFileIOFactory extends FileIOFactory {
   private final List<MeasuredFileIO> ios;
 
   public MeasuredFileIOFactory() {
@@ -41,7 +42,8 @@ public class MeasuredFileIOFactory implements FileIOFactory {
   @Override
   public FileIO loadFileIO(String ioImpl, Map<String, String> properties) {
     MeasuredFileIO wrapped =
-        new MeasuredFileIO(CatalogUtil.loadFileIO(ioImpl, properties, new Configuration()));
+        new MeasuredFileIO(CatalogUtil.loadFileIO(
+            ioImpl, mergeMaps(this.getProperties(), properties), new Configuration()));
     ios.add(wrapped);
     return wrapped;
   }

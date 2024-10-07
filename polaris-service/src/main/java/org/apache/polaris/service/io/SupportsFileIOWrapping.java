@@ -16,19 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.polaris.service.catalog;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.Map;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.iceberg.CatalogUtil;
+package org.apache.polaris.service.io;
+
 import org.apache.iceberg.io.FileIO;
 
-/** A simple FileIOFactory implementation that defers all the work to the Iceberg SDK */
-@JsonTypeName("default")
-public class DefaultFileIOFactory implements FileIOFactory {
-  @Override
-  public FileIO loadFileIO(String impl, Map<String, String> properties) {
-    return CatalogUtil.loadFileIO(impl, properties, new Configuration());
-  }
+import java.util.Map;
+
+/**
+ * Interface for {@link FileIOFactory} implementations that can wrap a {@link FileIO} around another {@link FileIO}
+ */
+public interface SupportsFileIOWrapping {
+    FileIO wrap(FileIO delegate, Map<String, String> properties);
 }

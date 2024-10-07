@@ -17,4 +17,4 @@
 # under the License.
 #
 
-org.apache.polaris.service.catalog.DefaultFileIOFactory
+org.apache.polaris.service.io.DefaultFileIOFactory

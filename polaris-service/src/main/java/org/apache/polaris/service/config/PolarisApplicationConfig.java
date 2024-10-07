@@ -30,9 +30,9 @@ import org.apache.polaris.core.PolarisConfigurationStore;
 import org.apache.polaris.core.auth.AuthenticatedPolarisPrincipal;
 import org.apache.polaris.core.persistence.MetaStoreManagerFactory;
 import org.apache.polaris.service.auth.DiscoverableAuthenticator;
-import org.apache.polaris.service.catalog.FileIOFactory;
 import org.apache.polaris.service.context.CallContextResolver;
 import org.apache.polaris.service.context.RealmContextResolver;
+import org.apache.polaris.service.io.IOConfiguration;
 import org.apache.polaris.service.ratelimiter.RateLimiter;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -56,7 +56,7 @@ public class PolarisApplicationConfig extends Configuration {
   private List<String> defaultRealms;
   private String awsAccessKey;
   private String awsSecretKey;
-  private FileIOFactory fileIOFactory;
+  private org.apache.polaris.service.io.IOConfiguration IOConfiguration;
   private RateLimiter rateLimiter;
 
   public static final long REQUEST_BODY_BYTES_NO_LIMIT = -1;
@@ -73,13 +73,13 @@ public class PolarisApplicationConfig extends Configuration {
   }
 
   @JsonProperty("io")
-  public void setFileIOFactory(FileIOFactory fileIOFactory) {
-    this.fileIOFactory = fileIOFactory;
+  public void setIOConfiguration(IOConfiguration IOConfiguration) {
+    this.IOConfiguration = IOConfiguration;
   }
 
   @JsonProperty("io")
-  public FileIOFactory getFileIOFactory() {
-    return fileIOFactory;
+  public IOConfiguration getIOConfiguration() {
+    return IOConfiguration;
   }
 
   @JsonProperty("authenticator")
