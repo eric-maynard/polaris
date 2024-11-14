@@ -628,7 +628,7 @@ public class PolarisCatalogHandlerWrapper {
                       Set.of(
                           PolarisStorageActions.READ,
                           PolarisStorageActions.WRITE,
-                          PolarisStorageActions.LIST)));
+                          PolarisStorageActions.LIST))); // TODO #### this is the last key
             }
             return responseBuilder.build();
           } else if (table instanceof BaseMetadataTable) {

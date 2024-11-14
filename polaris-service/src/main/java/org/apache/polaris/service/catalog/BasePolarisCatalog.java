@@ -1244,7 +1244,7 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
                       Set.of(latestLocationDir),
                       resolvedEntities,
                       new HashMap<>(tableDefaultProperties),
-                      Set.of(PolarisStorageActions.READ));
+                      Set.of(PolarisStorageActions.READ)); // TODO #### this is the second entry
               return TableMetadataParser.read(fileIO, metadataLocation);
             });
       }
@@ -1280,7 +1280,7 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
               getLocationsAllowedToBeAccessed(metadata),
               resolvedStorageEntity,
               new HashMap<>(metadata.properties()),
-              Set.of(PolarisStorageActions.READ, PolarisStorageActions.WRITE));
+              Set.of(PolarisStorageActions.READ, PolarisStorageActions.WRITE)); // TODO #### This is the first entry
 
       List<PolarisEntity> resolvedNamespace =
           resolvedTableEntities == null
