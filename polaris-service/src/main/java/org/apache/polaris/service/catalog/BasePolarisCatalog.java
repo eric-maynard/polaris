@@ -1280,7 +1280,9 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
               getLocationsAllowedToBeAccessed(metadata),
               resolvedStorageEntity,
               new HashMap<>(metadata.properties()),
-              Set.of(PolarisStorageActions.READ, PolarisStorageActions.WRITE)); // TODO #### This is the first entry
+              Set.of(
+                  PolarisStorageActions.READ,
+                  PolarisStorageActions.WRITE)); // TODO #### This is the first entry
 
       List<PolarisEntity> resolvedNamespace =
           resolvedTableEntities == null
