@@ -609,10 +609,10 @@ public class PolarisCatalogHandlerWrapper {
                   .withPartitionSpec(request.spec())
                   .withSortOrder(request.writeOrder())
                   .withProperties(properties)
-                  .create();
+                  .create(); // this calls refreshIOWithCredentials via doCommit (BPC 1254)
 
           if (table instanceof BaseTable baseTable) {
-            TableMetadata tableMetadata = baseTable.operations().current();
+            TableMetadata tableMetadata = baseTable.operations().current(); // this calls refreshIOWithCredentials via doRefresh (BPC 1231)
             LoadTableResponse.Builder responseBuilder =
                 LoadTableResponse.builder().withTableMetadata(tableMetadata);
             if (baseCatalog instanceof SupportsCredentialDelegation credentialDelegation) {
@@ -622,7 +622,7 @@ public class PolarisCatalogHandlerWrapper {
                   .addKeyValue("tableLocation", tableMetadata.location())
                   .log("Fetching client credentials for table");
               responseBuilder.addAllConfig(
-                  credentialDelegation.getCredentialConfig(
+                  credentialDelegation.getCredentialConfig( // this calls refreshCredentials
                       tableIdentifier,
                       tableMetadata,
                       Set.of(
