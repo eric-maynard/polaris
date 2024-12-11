@@ -557,6 +557,13 @@ public class PolarisRestCatalogIntegrationTest extends CatalogTests<RESTCatalog>
         .withLocation(catalogBaseLocation + "/checkpoint_dir/delta/t1")
         .withProperty("_source", "delta")
         .create();
+
+    Table table = restCatalog.loadTable(tableIdentifier);
+    assertThat(table)
+        .isNotNull()
+        .isInstanceOf(BaseTable.class)
+        .asInstanceOf(InstanceOfAssertFactories.type(BaseTable.class))
+        .returns(catalogBaseLocation + "/checkpoint_dir/delta/t1", BaseTable::location);
   }
 
   @Test
