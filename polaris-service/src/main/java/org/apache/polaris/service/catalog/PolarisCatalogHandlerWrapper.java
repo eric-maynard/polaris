@@ -78,6 +78,9 @@ import org.apache.polaris.core.auth.PolarisAuthorizer;
 import org.apache.polaris.core.catalog.PolarisCatalogHelpers;
 import org.apache.polaris.core.context.CallContext;
 import org.apache.polaris.core.entity.CatalogEntity;
+import org.apache.polaris.core.entity.ForeignTableEntity;
+import org.apache.polaris.core.entity.PolarisBaseEntity;
+import org.apache.polaris.core.entity.PolarisEntity;
 import org.apache.polaris.core.entity.PolarisEntitySubType;
 import org.apache.polaris.core.entity.PolarisEntityType;
 import org.apache.polaris.core.persistence.PolarisEntityManager;
@@ -88,6 +91,7 @@ import org.apache.polaris.core.persistence.resolver.PolarisResolutionManifest;
 import org.apache.polaris.core.persistence.resolver.ResolverPath;
 import org.apache.polaris.core.persistence.resolver.ResolverStatus;
 import org.apache.polaris.core.storage.PolarisStorageActions;
+import org.apache.polaris.core.tables.ForeignTableConverter;
 import org.apache.polaris.service.context.CallContextCatalogFactory;
 import org.apache.polaris.service.types.NotificationRequest;
 import org.slf4j.Logger;
@@ -574,7 +578,15 @@ public class PolarisCatalogHandlerWrapper {
     if (isExternal(catalog)) {
       throw new BadRequestException("Cannot create table on external catalogs.");
     }
-    return doCatalogOperation(() -> CatalogHandlers.createTable(baseCatalog, namespace, request));
+
+    LoadTableResponse response = doCatalogOperation(() -> CatalogHandlers.createTable(baseCatalog, namespace, request));
+    TableIdentifier tableIdentifier = TableIdentifier.of(namespace, request.name());
+    PolarisBaseEntity tableEntity = ((BasePolarisCatalog)baseCatalog).getTableEntity(tableIdentifier);
+    if (tableEntity.getSubType() == PolarisEntitySubType.FOREIGN_TABLE) {
+      response =  doCatalogOperation(() -> ForeignTableConverter.loadTable(new ForeignTableEntity(tableEntity)));
+    }
+
+    return response;
   }
 
   public LoadTableResponse createTableDirectWithWriteDelegation(
@@ -803,7 +815,12 @@ public class PolarisCatalogHandlerWrapper {
       authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.FOREIGN_TABLE, tableIdentifier);
     }
 
-    return doCatalogOperation(() -> CatalogHandlers.loadTable(baseCatalog, tableIdentifier));
+    PolarisBaseEntity tableEntity = ((BasePolarisCatalog)baseCatalog).getTableEntity(tableIdentifier);
+    if (tableEntity.getSubType() == PolarisEntitySubType.FOREIGN_TABLE) {
+      return doCatalogOperation(() -> ForeignTableConverter.loadTable(new ForeignTableEntity(tableEntity)));
+    } else {
+      return doCatalogOperation(() -> CatalogHandlers.loadTable(baseCatalog, tableIdentifier));
+    }
   }
 
   public LoadTableResponse loadTableWithAccessDelegation(
