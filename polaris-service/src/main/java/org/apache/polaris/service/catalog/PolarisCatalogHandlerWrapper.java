@@ -578,7 +578,15 @@ public class PolarisCatalogHandlerWrapper {
     if (isExternal(catalog)) {
       throw new BadRequestException("Cannot create table on external catalogs.");
     }
-    return doCatalogOperation(() -> CatalogHandlers.createTable(baseCatalog, namespace, request));
+
+    LoadTableResponse response = doCatalogOperation(() -> CatalogHandlers.createTable(baseCatalog, namespace, request));
+    TableIdentifier tableIdentifier = TableIdentifier.of(namespace, request.name());
+    PolarisBaseEntity tableEntity = ((BasePolarisCatalog)baseCatalog).getTableEntity(tableIdentifier);
+    if (tableEntity.getSubType() == PolarisEntitySubType.FOREIGN_TABLE) {
+      response =  doCatalogOperation(() -> ForeignTableConverter.loadTable(new ForeignTableEntity(tableEntity)));
+    }
+
+    return response;
   }
 
   public LoadTableResponse createTableDirectWithWriteDelegation(
@@ -809,7 +817,7 @@ public class PolarisCatalogHandlerWrapper {
 
     PolarisBaseEntity tableEntity = ((BasePolarisCatalog)baseCatalog).getTableEntity(tableIdentifier);
     if (tableEntity.getSubType() == PolarisEntitySubType.FOREIGN_TABLE) {
-      return doCatalogOperation(() -> ForeignTableConverter.loadTable((ForeignTableEntity)tableEntity));
+      return doCatalogOperation(() -> ForeignTableConverter.loadTable(new ForeignTableEntity(tableEntity)));
     } else {
       return doCatalogOperation(() -> CatalogHandlers.loadTable(baseCatalog, tableIdentifier));
     }

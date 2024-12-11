@@ -45,7 +45,7 @@ public class DeltaTableConverter implements ForeignTableConverter {
   @Override
   public Table convert(ForeignTableEntity entity) throws ConversionFailureException {
     // TODO: checking whether the entity is already converted
-    if (!TableFormat.DELTA.equals(entity.getSource())) {
+    if (!TableFormat.DELTA.equalsIgnoreCase(entity.getSource())) {
       throw new ConversionFailureException("Invalid source format: " + entity.getSource());
     }
     SyncResult syncResult = runSync(entity);

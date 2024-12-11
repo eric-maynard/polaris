@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
+import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit5.DropwizardAppExtension;
@@ -37,9 +38,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
+import org.apache.iceberg.BaseTable;
+import org.apache.iceberg.Table;
+import org.apache.iceberg.catalog.Namespace;
+import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.rest.requests.ImmutableRegisterTableRequest;
 import org.apache.iceberg.rest.responses.LoadTableResponse;
 import org.apache.polaris.core.admin.model.AwsStorageConfigInfo;
@@ -49,9 +55,12 @@ import org.apache.polaris.core.admin.model.ExternalCatalog;
 import org.apache.polaris.core.admin.model.FileStorageConfigInfo;
 import org.apache.polaris.core.admin.model.PolarisCatalog;
 import org.apache.polaris.core.admin.model.StorageConfigInfo;
+import org.apache.polaris.core.admin.model.UpdateCatalogRequest;
+import org.apache.polaris.core.entity.PolarisEntityConstants;
 import org.apache.polaris.service.PolarisApplication;
 import org.apache.polaris.service.config.PolarisApplicationConfig;
 import org.apache.polaris.service.test.PolarisConnectionExtension;
+import org.apache.polaris.service.test.PolarisConnectionExtension.PolarisToken;
 import org.apache.polaris.service.test.PolarisRealm;
 import org.apache.polaris.service.test.TestEnvironmentExtension;
 import org.apache.polaris.service.types.NotificationRequest;
@@ -60,6 +69,7 @@ import org.apache.polaris.service.types.TableUpdateNotification;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -188,8 +198,8 @@ public class PolarisSparkForeignTableIntegrationTest {
 
   @AfterEach
   public void after() {
-    cleanupCatalog(CATALOG_NAME);
-    cleanupCatalog(EXTERNAL_CATALOG_NAME);
+    // cleanupCatalog(CATALOG_NAME);
+    // cleanupCatalog(EXTERNAL_CATALOG_NAME);
     try {
       SparkSession.clearDefaultSession();
       SparkSession.clearActiveSession();

@@ -31,7 +31,7 @@ public interface ForeignTableConverter {
   Table convert(ForeignTableEntity entity) throws ConversionFailureException;
 
   static LoadTableResponse loadTable(ForeignTableEntity entity) {
-    if (TableFormat.DELTA.equals(entity.getSource())) {
+    if (TableFormat.DELTA.equalsIgnoreCase(entity.getSource())) {
       Table table = new DeltaTableConverter().convert(entity);
       return LoadTableResponse.builder().withTableMetadata(((BaseTable)table).operations().current()).build();
     }
