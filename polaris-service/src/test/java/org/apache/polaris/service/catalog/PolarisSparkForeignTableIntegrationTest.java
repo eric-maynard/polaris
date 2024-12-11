@@ -198,8 +198,8 @@ public class PolarisSparkForeignTableIntegrationTest {
 
   @AfterEach
   public void after() {
-    // cleanupCatalog(CATALOG_NAME);
-    // cleanupCatalog(EXTERNAL_CATALOG_NAME);
+    cleanupCatalog(CATALOG_NAME);
+    cleanupCatalog(EXTERNAL_CATALOG_NAME);
     try {
       SparkSession.clearDefaultSession();
       SparkSession.clearActiveSession();
