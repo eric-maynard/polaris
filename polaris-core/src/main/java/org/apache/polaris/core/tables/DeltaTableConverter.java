@@ -19,6 +19,7 @@
 package org.apache.polaris.core.tables;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Collections;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.hadoop.HadoopTables;
@@ -31,8 +32,6 @@ import org.apache.xtable.delta.DeltaConversionSourceProvider;
 import org.apache.xtable.model.storage.TableFormat;
 import org.apache.xtable.model.sync.SyncMode;
 import org.apache.xtable.model.sync.SyncResult;
-
-import java.util.Collections;
 
 /** Use XTable library to convert Delta table to Iceberg table */
 public class DeltaTableConverter implements ForeignTableConverter {

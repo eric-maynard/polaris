@@ -20,8 +20,6 @@ package org.apache.polaris.core.tables;
 
 import org.apache.iceberg.BaseTable;
 import org.apache.iceberg.Table;
-import org.apache.iceberg.catalog.Catalog;
-import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.rest.responses.LoadTableResponse;
 import org.apache.polaris.core.entity.ForeignTableEntity;
 import org.apache.xtable.model.storage.TableFormat;
@@ -33,10 +31,11 @@ public interface ForeignTableConverter {
   static LoadTableResponse loadTable(ForeignTableEntity entity) {
     if (TableFormat.DELTA.equalsIgnoreCase(entity.getSource())) {
       Table table = new DeltaTableConverter().convert(entity);
-      return LoadTableResponse.builder().withTableMetadata(((BaseTable)table).operations().current()).build();
+      return LoadTableResponse.builder()
+          .withTableMetadata(((BaseTable) table).operations().current())
+          .build();
     }
 
     throw new ConversionFailureException("Invalid source format: " + entity.getSource());
   }
-
 }
