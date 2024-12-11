@@ -808,12 +808,7 @@ public class PolarisCatalogHandlerWrapper {
   public LoadTableResponse loadTable(TableIdentifier tableIdentifier, String snapshots) {
     PolarisAuthorizableOperation op = PolarisAuthorizableOperation.LOAD_TABLE;
 
-    try {
-      authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
-    } catch (NoSuchTableException e) {
-      // This could be a FOREIGN_TABLE subtype
-      authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.FOREIGN_TABLE, tableIdentifier);
-    }
+    authorizeBasicTableOperationOrThrow(op, tableIdentifier);
 
     PolarisBaseEntity tableEntity = ((BasePolarisCatalog)baseCatalog).getTableEntity(tableIdentifier);
     if (tableEntity.getSubType() == PolarisEntitySubType.FOREIGN_TABLE) {
@@ -959,16 +954,28 @@ public class PolarisCatalogHandlerWrapper {
             CatalogHandlers.updateTable(baseCatalog, tableIdentifier, applyUpdateFilters(request)));
   }
 
+  public void authorizeBasicTableOperationOrThrow(
+      PolarisAuthorizableOperation op, TableIdentifier tableIdentifier) {
+    try {
+      authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
+    } catch (NoSuchTableException e) {
+      // This could be a FOREIGN_TABLE subtype
+      authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.FOREIGN_TABLE, tableIdentifier);
+    }
+  }
+
+
   public void dropTableWithoutPurge(TableIdentifier tableIdentifier) {
     PolarisAuthorizableOperation op = PolarisAuthorizableOperation.DROP_TABLE_WITHOUT_PURGE;
-    authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
+    authorizeBasicTableOperationOrThrow(op, tableIdentifier);
+    // authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
 
     doCatalogOperation(() -> CatalogHandlers.dropTable(baseCatalog, tableIdentifier));
   }
 
   public void dropTableWithPurge(TableIdentifier tableIdentifier) {
     PolarisAuthorizableOperation op = PolarisAuthorizableOperation.DROP_TABLE_WITH_PURGE;
-    authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
+    authorizeBasicTableOperationOrThrow(op, tableIdentifier);
 
     CatalogEntity catalog =
         CatalogEntity.of(
@@ -984,7 +991,7 @@ public class PolarisCatalogHandlerWrapper {
 
   public void tableExists(TableIdentifier tableIdentifier) {
     PolarisAuthorizableOperation op = PolarisAuthorizableOperation.TABLE_EXISTS;
-    authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
+    authorizeBasicTableOperationOrThrow(op, tableIdentifier);
 
     // TODO: Just skip CatalogHandlers for this one maybe
     doCatalogOperation(() -> CatalogHandlers.loadTable(baseCatalog, tableIdentifier));

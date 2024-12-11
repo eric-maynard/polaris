@@ -440,6 +440,10 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
             .orElse(Map.of());
     PolarisMetaStoreManager.DropEntityResult dropEntityResult =
         dropTableLike(PolarisEntitySubType.TABLE, tableIdentifier, storageProperties, purge);
+    if (dropEntityResult.getReturnStatus() == BaseResult.ReturnStatus.ENTITY_NOT_FOUND) {
+      // try look for foreign table
+      dropEntityResult = dropTableLike(PolarisEntitySubType.FOREIGN_TABLE, tableIdentifier, storageProperties, purge);
+    }
     if (!dropEntityResult.isSuccess()) {
       return false;
     }
@@ -463,7 +467,10 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
           "Cannot list tables for namespace. Namespace does not exist: %s", namespace);
     }
 
-    return listTableLike(PolarisEntitySubType.TABLE, namespace);
+    List<TableIdentifier> tableIdentifiers = listTableLike(PolarisEntitySubType.TABLE, namespace);
+    tableIdentifiers.addAll(listTableLike(PolarisEntitySubType.FOREIGN_TABLE, namespace));
+
+    return tableIdentifiers;
   }
 
   @Override
@@ -852,6 +859,9 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
   private @Nonnull Optional<PolarisEntity> findStorageInfo(TableIdentifier tableIdentifier) {
     PolarisResolvedPathWrapper resolvedTableEntities =
         resolvedEntityView.getResolvedPath(tableIdentifier, PolarisEntitySubType.TABLE);
+    if (resolvedTableEntities == null) {
+      resolvedTableEntities = resolvedEntityView.getResolvedPath(tableIdentifier, PolarisEntitySubType.FOREIGN_TABLE);
+    }
 
     PolarisResolvedPathWrapper resolvedStorageEntity =
         resolvedTableEntities == null
@@ -1924,6 +1934,7 @@ public class BasePolarisCatalog extends BaseMetastoreViewCatalog
     Preconditions.checkNotNull(notificationType, "Expected a valid notification type.");
 
     if (notificationType == NotificationType.DROP) {
+
       return dropTableLike(PolarisEntitySubType.TABLE, tableIdentifier, Map.of(), false /* purge */)
           .isSuccess();
     } else if (notificationType == NotificationType.VALIDATE) {
