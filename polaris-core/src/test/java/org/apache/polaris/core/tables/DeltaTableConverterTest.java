@@ -19,31 +19,88 @@
 
 package org.apache.polaris.core.tables;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.util.List;
+import org.apache.commons.io.FileUtils;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.types.Types;
 import org.apache.polaris.core.entity.ForeignTableEntity;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import org.apache.xtable.model.storage.TableFormat;
 import org.apache.xtable.model.sync.SyncResult;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class DeltaTableConverterTest {
-  private final DeltaTableConverter converter;
+  private static DeltaTableConverter converter;
+  private static String baseLocation;
+  private SparkSession spark;
 
-  public DeltaTableConverterTest() {
-    this.converter = new DeltaTableConverter();
+  @BeforeAll
+  public static void setup() {
+    converter = new DeltaTableConverter();
+    String tableName = "people";
+    String localBasePath = "file:///tmp/delta-dataset";
+    baseLocation = Path.of(localBasePath, tableName).toString();
+  }
+
+  @BeforeEach
+  public void before() {
+    SparkSession.Builder sessionBuilder =
+        SparkSession.builder()
+            .master("local[1]")
+            .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+            .config(
+                "spark.sql.catalog.spark_catalog",
+                "org.apache.spark.sql.delta.catalog.DeltaCatalog");
+    spark = sessionBuilder.getOrCreate();
+
+    var schema =
+        new StructType()
+            .add(StructField.apply("id", DataTypes.IntegerType, true, Metadata.empty()))
+            .add(StructField.apply("name", DataTypes.StringType, true, Metadata.empty()))
+            .add(StructField.apply("age", DataTypes.IntegerType, true, Metadata.empty()))
+            .add(StructField.apply("city", DataTypes.StringType, true, Metadata.empty()))
+            .add(StructField.apply("create_ts", DataTypes.StringType, true, Metadata.empty()));
+    var rows =
+        List.of(
+            RowFactory.create(1, "John", 25, "NYC", "2023-09-28 00:00:00"),
+            RowFactory.create(2, "Emily", 30, "SFO", "2023-09-28 00:00:00"),
+            RowFactory.create(3, "Michael", 35, "ORD", "2023-09-28 00:00:00"),
+            RowFactory.create(4, "Andrew", 40, "NYC", "2023-10-28 00:00:00"),
+            RowFactory.create(5, "Bob", 28, "SEA", "2023-09-23 00:00:00"),
+            RowFactory.create(6, "Charlie", 31, "DFW", "2023-08-29 00:00:00"));
+    var dataFrame = spark.createDataFrame(rows, schema);
+    dataFrame
+        .write()
+        .format("delta")
+        .partitionBy("city")
+        .mode(SaveMode.Overwrite)
+        .save(baseLocation);
+  }
+
+  @AfterEach
+  public void after() {
+    spark.stop();
+    FileUtils.deleteQuietly(new File(baseLocation.replace("file:", "")));
   }
 
   @Test
   void testRunSync() {
-    // This test is currently hardcoded and requires manually creating the Delta table using Spark
-    // in the base location. Since this is for Snowvation, will automate these tests when bandwidth
-    // allows.
     TableIdentifier identifier = TableIdentifier.of(Namespace.of("db1", "schema1"), "people");
-    final String baseLocation = "file:///tmp/delta-dataset/people/";
-    final String metadataLocation = baseLocation + "metadata/v1.metadata.json";
+    final String metadataLocation = "dummy_location";
 
     ForeignTableEntity entity =
         new ForeignTableEntity.Builder(identifier, metadataLocation)
@@ -57,12 +114,8 @@ public class DeltaTableConverterTest {
 
   @Test
   void testConvert() {
-    // This test is currently hardcoded and requires manually creating the Delta table using Spark
-    // in the base location. Since this is for Snowvation, will automate these tests when bandwidth
-    // allows.
     TableIdentifier identifier = TableIdentifier.of(Namespace.of("db1", "schema1"), "people");
-    final String baseLocation = "file:///tmp/delta-dataset/people/";
-    final String metadataLocation = baseLocation + "metadata/v1.metadata.json";
+    final String metadataLocation = "dummy_location";
 
     ForeignTableEntity entity =
         new ForeignTableEntity.Builder(identifier, metadataLocation)
