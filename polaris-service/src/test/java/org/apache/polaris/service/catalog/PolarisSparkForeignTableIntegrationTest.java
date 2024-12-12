@@ -20,10 +20,7 @@ package org.apache.polaris.service.catalog;
 
 import static org.apache.polaris.service.context.DefaultContextResolver.REALM_PROPERTY_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
-import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit5.DropwizardAppExtension;
@@ -32,44 +29,30 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.CopyOption;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.apache.commons.io.FileUtils;
-import org.apache.iceberg.BaseTable;
-import org.apache.iceberg.Table;
-import org.apache.iceberg.catalog.Namespace;
-import org.apache.iceberg.catalog.TableIdentifier;
-import org.apache.iceberg.rest.requests.ImmutableRegisterTableRequest;
-import org.apache.iceberg.rest.responses.LoadTableResponse;
-import org.apache.polaris.core.admin.model.AwsStorageConfigInfo;
 import org.apache.polaris.core.admin.model.Catalog;
 import org.apache.polaris.core.admin.model.CatalogProperties;
 import org.apache.polaris.core.admin.model.ExternalCatalog;
 import org.apache.polaris.core.admin.model.FileStorageConfigInfo;
 import org.apache.polaris.core.admin.model.PolarisCatalog;
 import org.apache.polaris.core.admin.model.StorageConfigInfo;
-import org.apache.polaris.core.admin.model.UpdateCatalogRequest;
-import org.apache.polaris.core.entity.PolarisEntityConstants;
 import org.apache.polaris.service.PolarisApplication;
 import org.apache.polaris.service.config.PolarisApplicationConfig;
 import org.apache.polaris.service.test.PolarisConnectionExtension;
-import org.apache.polaris.service.test.PolarisConnectionExtension.PolarisToken;
 import org.apache.polaris.service.test.PolarisRealm;
 import org.apache.polaris.service.test.TestEnvironmentExtension;
-import org.apache.polaris.service.types.NotificationRequest;
-import org.apache.polaris.service.types.NotificationType;
-import org.apache.polaris.service.types.TableUpdateNotification;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import org.assertj.core.api.InstanceOfAssertFactories;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -120,9 +103,10 @@ public class PolarisSparkForeignTableIntegrationTest {
   @BeforeEach
   public void before(@PolarisRealm String realm) {
     this.realm = realm;
-    FileStorageConfigInfo storageConfigInfo = FileStorageConfigInfo.builder(StorageConfigInfo.StorageTypeEnum.FILE)
-        .setAllowedLocations(List.of("file://" + testDir.toFile().getAbsolutePath()))
-        .build();
+    FileStorageConfigInfo storageConfigInfo =
+        FileStorageConfigInfo.builder(StorageConfigInfo.StorageTypeEnum.FILE)
+            .setAllowedLocations(List.of("file://" + testDir.toFile().getAbsolutePath()))
+            .build();
 
     CatalogProperties props = new CatalogProperties("file://" + testDir.toFile().getAbsolutePath());
     Catalog catalog =
@@ -144,7 +128,8 @@ public class PolarisSparkForeignTableIntegrationTest {
       assertThat(response).returns(Response.Status.CREATED.getStatusCode(), Response::getStatus);
     }
 
-    CatalogProperties externalProps = new CatalogProperties("file://" + testDir.toFile().getAbsolutePath());
+    CatalogProperties externalProps =
+        new CatalogProperties("file://" + testDir.toFile().getAbsolutePath());
     Catalog externalCatalog =
         ExternalCatalog.builder()
             .setType(Catalog.TypeEnum.EXTERNAL)
@@ -239,10 +224,9 @@ public class PolarisSparkForeignTableIntegrationTest {
 
   @Test
   public void testCreateForeignTable() throws IOException {
-    // Copy delta data
-    String currentDir = FileSystems.getDefault().getPath("").toAbsolutePath().toString();
     File targetDir = new File(testDir.toFile(), "ns1");
-    FileUtils.copyDirectory(new File(currentDir, "dataset/people/"), targetDir);
+    DeltaTable deltaTable = new DeltaTable(targetDir.getAbsolutePath());
+    deltaTable.create();
 
     long namespaceCount = onSpark("SHOW NAMESPACES").count();
     assertThat(namespaceCount).isEqualTo(0L);
@@ -250,14 +234,81 @@ public class PolarisSparkForeignTableIntegrationTest {
     onSpark("CREATE NAMESPACE ns1");
     onSpark("USE ns1");
 
-    onSpark("CREATE TABLE tbl1 (col1 integer, col2 string) using iceberg TBLPROPERTIES('_source'='delta') location '" + targetDir.getAbsolutePath() +"'");
-    long recordCount = onSpark("SELECT * FROM tbl1").count();
-    assertThat(recordCount).isEqualTo(6);
+    onSpark(
+        "CREATE TABLE tbl1 (col1 integer, col2 string) using iceberg TBLPROPERTIES('_source'='delta') location '"
+            + targetDir.getAbsolutePath()
+            + "'");
+    assertThat(onSpark("SELECT * FROM tbl1").count()).isEqualTo(6);
+    deltaTable.append();
+    onSpark("REFRESH TABLE tbl1");
+    assertThat(onSpark("SELECT * FROM tbl1").count()).isEqualTo(12);
 
     FileUtils.deleteDirectory(targetDir);
   }
 
   private static Dataset<Row> onSpark(@Language("SQL") String sql) {
     return spark.sql(sql);
+  }
+
+  private static class DeltaTable {
+    private String tableLocation;
+    private SparkSession sparkSession;
+    private StructType schema;
+
+    DeltaTable(String location) {
+      tableLocation = Path.of(location).toString();
+
+      SparkSession.Builder sessionBuilder =
+          SparkSession.builder()
+              .master("local[1]")
+              .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+              .config(
+                  "spark.sql.catalog.spark_catalog",
+                  "org.apache.spark.sql.delta.catalog.DeltaCatalog");
+      sparkSession = sessionBuilder.getOrCreate();
+    }
+
+    void create() {
+      schema =
+          new StructType()
+              .add(StructField.apply("id", DataTypes.IntegerType, true, Metadata.empty()))
+              .add(StructField.apply("name", DataTypes.StringType, true, Metadata.empty()))
+              .add(StructField.apply("age", DataTypes.IntegerType, true, Metadata.empty()))
+              .add(StructField.apply("city", DataTypes.StringType, true, Metadata.empty()))
+              .add(StructField.apply("create_ts", DataTypes.StringType, true, Metadata.empty()));
+      var rows =
+          List.of(
+              RowFactory.create(1, "John", 25, "NYC", "2023-09-28 00:00:00"),
+              RowFactory.create(2, "Emily", 30, "SFO", "2023-09-28 00:00:00"),
+              RowFactory.create(3, "Michael", 35, "ORD", "2023-09-28 00:00:00"),
+              RowFactory.create(4, "Andrew", 40, "NYC", "2023-10-28 00:00:00"),
+              RowFactory.create(5, "Bob", 28, "SEA", "2023-09-23 00:00:00"),
+              RowFactory.create(6, "Charlie", 31, "DFW", "2023-08-29 00:00:00"));
+      var dataFrame = sparkSession.createDataFrame(rows, schema);
+      dataFrame
+          .write()
+          .format("delta")
+          .partitionBy("city")
+          .mode(SaveMode.Overwrite)
+          .save(tableLocation);
+    }
+
+    void append() {
+      var rows =
+          List.of(
+              RowFactory.create(1, "John", 25, "NYC", "2023-09-28 00:00:00"),
+              RowFactory.create(2, "Emily", 30, "SFO", "2023-09-28 00:00:00"),
+              RowFactory.create(3, "Michael", 35, "ORD", "2023-09-28 00:00:00"),
+              RowFactory.create(4, "Andrew", 40, "NYC", "2023-10-28 00:00:00"),
+              RowFactory.create(5, "Bob", 28, "SEA", "2023-09-23 00:00:00"),
+              RowFactory.create(6, "Charlie", 31, "DFW", "2023-08-29 00:00:00"));
+      var dataFrame = sparkSession.createDataFrame(rows, schema);
+      dataFrame
+          .write()
+          .format("delta")
+          .partitionBy("city")
+          .mode(SaveMode.Append)
+          .save(tableLocation);
+    }
   }
 }

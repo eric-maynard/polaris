@@ -80,7 +80,6 @@ import org.apache.polaris.core.context.CallContext;
 import org.apache.polaris.core.entity.CatalogEntity;
 import org.apache.polaris.core.entity.ForeignTableEntity;
 import org.apache.polaris.core.entity.PolarisBaseEntity;
-import org.apache.polaris.core.entity.PolarisEntity;
 import org.apache.polaris.core.entity.PolarisEntitySubType;
 import org.apache.polaris.core.entity.PolarisEntityType;
 import org.apache.polaris.core.persistence.PolarisEntityManager;
@@ -563,7 +562,6 @@ public class PolarisCatalogHandlerWrapper {
     return doCatalogOperation(() -> CatalogHandlers.listTables(baseCatalog, namespace));
   }
 
-
   public LoadTableResponse createTableDirect(Namespace namespace, CreateTableRequest request) {
     PolarisAuthorizableOperation op = PolarisAuthorizableOperation.CREATE_TABLE_DIRECT;
     authorizeCreateTableLikeUnderNamespaceOperationOrThrow(
@@ -810,9 +808,11 @@ public class PolarisCatalogHandlerWrapper {
 
     authorizeBasicTableOperationOrThrow(op, tableIdentifier);
 
-    PolarisBaseEntity tableEntity = ((BasePolarisCatalog)baseCatalog).getTableEntity(tableIdentifier);
+    PolarisBaseEntity tableEntity =
+        ((BasePolarisCatalog) baseCatalog).getTableEntity(tableIdentifier);
     if (tableEntity.getSubType() == PolarisEntitySubType.FOREIGN_TABLE) {
-      return doCatalogOperation(() -> ForeignTableConverter.loadTable(new ForeignTableEntity(tableEntity)));
+      return doCatalogOperation(
+          () -> ForeignTableConverter.loadTable(new ForeignTableEntity(tableEntity)));
     } else {
       return doCatalogOperation(() -> CatalogHandlers.loadTable(baseCatalog, tableIdentifier));
     }
@@ -960,15 +960,14 @@ public class PolarisCatalogHandlerWrapper {
       authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
     } catch (NoSuchTableException e) {
       // This could be a FOREIGN_TABLE subtype
-      authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.FOREIGN_TABLE, tableIdentifier);
+      authorizeBasicTableLikeOperationOrThrow(
+          op, PolarisEntitySubType.FOREIGN_TABLE, tableIdentifier);
     }
   }
-
 
   public void dropTableWithoutPurge(TableIdentifier tableIdentifier) {
     PolarisAuthorizableOperation op = PolarisAuthorizableOperation.DROP_TABLE_WITHOUT_PURGE;
     authorizeBasicTableOperationOrThrow(op, tableIdentifier);
-    // authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.TABLE, tableIdentifier);
 
     doCatalogOperation(() -> CatalogHandlers.dropTable(baseCatalog, tableIdentifier));
   }
