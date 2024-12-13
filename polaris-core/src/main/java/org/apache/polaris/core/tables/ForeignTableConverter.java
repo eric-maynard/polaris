@@ -22,6 +22,7 @@ import org.apache.iceberg.BaseTable;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.rest.responses.LoadTableResponse;
 import org.apache.polaris.core.entity.ForeignTableEntity;
+import org.apache.polaris.core.entity.TableLikeEntity;
 import org.apache.xtable.model.storage.TableFormat;
 
 public interface ForeignTableConverter {
@@ -29,8 +30,9 @@ public interface ForeignTableConverter {
   Table convert(ForeignTableEntity entity) throws ConversionFailureException;
 
   static LoadTableResponse loadTable(ForeignTableEntity entity) {
+    ForeignTableEntity sourceStrippedEntity = new ForeignTableEntity.Builder(entity).setSource(null).build();
     if (TableFormat.DELTA.equalsIgnoreCase(entity.getSource())) {
-      Table table = new DeltaTableConverter().convert(entity);
+      Table table = new DeltaTableConverter().convert(sourceStrippedEntity);
       return LoadTableResponse.builder()
           .withTableMetadata(((BaseTable) table).operations().current())
           .build();
