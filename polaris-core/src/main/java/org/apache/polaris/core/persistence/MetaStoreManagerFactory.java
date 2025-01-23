@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.polaris.core.persistence;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import org.apache.polaris.core.auth.PolarisSecretsManager.PrincipalSecretsResult;
+import org.apache.polaris.core.context.RealmId;
+import org.apache.polaris.core.persistence.cache.EntityCache;
+import org.apache.polaris.core.storage.cache.StorageCredentialCache;
+
+/** Configuration interface for configuring the {@link PolarisMetaStoreManager}. */
+public interface MetaStoreManagerFactory {
+
+  PolarisMetaStoreManager getOrCreateMetaStoreManager(RealmId realmId);
+
+  Supplier<PolarisMetaStoreSession> getOrCreateSessionSupplier(RealmId realmId);
+
+  StorageCredentialCache getOrCreateStorageCredentialCache(RealmId realmId);
+
+  EntityCache getOrCreateEntityCache(RealmId realmId);
+
+  Map<String, PrincipalSecretsResult> bootstrapRealms(
+      List<String> realms, PolarisCredentialsBootstrap credentialsBootstrap);
+
+  /** Purge all metadata for the realms provided */
+  void purgeRealms(List<String> realms);
+}

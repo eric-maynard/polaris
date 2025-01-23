@@ -1,27 +1,29 @@
 #
-# Copyright (c) 2024 Snowflake Computing Inc.
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 #
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from pydantic import StrictStr
 
 from cli.command import Command
 from cli.constants import Subcommands
-from polaris.management import PolarisDefaultApi, CreatePrincipalRequest, Principal, UpdatePrincipalRequest, \
-    GrantPrincipalRoleRequest, PrincipalRole
+from polaris.management import PolarisDefaultApi, CreatePrincipalRequest, Principal, UpdatePrincipalRequest
 
 
 @dataclass
@@ -43,6 +45,8 @@ class PrincipalsCommand(Command):
     client_id: str
     principal_role: str
     properties: Optional[Dict[str, StrictStr]]
+    set_properties: Dict[str, StrictStr]
+    remove_properties: List[str]
 
     def validate(self):
         pass
@@ -73,9 +77,20 @@ class PrincipalsCommand(Command):
             print(api.rotate_credentials(self.principal_name).to_json())
         elif self.principals_subcommand == Subcommands.UPDATE:
             principal = api.get_principal(self.principal_name)
+            new_properties = principal.properties or {}
+
+            # Add or update all entries specified in set_properties
+            if self.set_properties:
+                new_properties = {**new_properties, **self.set_properties}
+
+            # Remove all keys specified in remove_properties
+            if self.remove_properties:
+                for to_remove in self.remove_properties:
+                    new_properties.pop(to_remove, None)
+
             request = UpdatePrincipalRequest(
-                current_entity_version=principal.current_entity_version,
-                properties=self.properties
+                current_entity_version=principal.entity_version,
+                properties=new_properties
             )
             api.update_principal(self.principal_name, request)
         else:

@@ -1,17 +1,20 @@
 #
-# Copyright (c) 2024 Snowflake Computing Inc.
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 #
 from dataclasses import dataclass
 from typing import List
@@ -19,7 +22,8 @@ from typing import List
 from pydantic import StrictStr
 
 from cli.command import Command
-from cli.constants import Subcommands, Actions
+from cli.constants import Subcommands, Actions, Arguments
+from cli.options.option_tree import Argument
 from polaris.management import PolarisDefaultApi, AddGrantRequest, NamespaceGrant, \
     RevokeGrantRequest, CatalogGrant, TableGrant, ViewGrant, CatalogPrivilege, NamespacePrivilege, TablePrivilege, \
     ViewPrivilege
@@ -33,9 +37,9 @@ class PrivilegesCommand(Command):
     `action`, represent parameters provided to either the `grant` or `revoke` action.
 
     Example commands:
-        * ./polaris privileges --catalog c --catalog-role cr table grant --namespace n --table t PRIVILEGE_NAME
-        * ./polaris privileges --catalog c --catalog-role cr namespace revoke --namespace n PRIVILEGE_NAME
-        * ./polaris privileges -catalog c --catalog-role cr list
+        * ./polaris privileges table grant --catalog c --catalog-role cr --namespace n --table t PRIVILEGE_NAME
+        * ./polaris privileges namespace revoke --catalog c --catalog-role cr --namespace n PRIVILEGE_NAME
+        * ./polaris privileges list --catalog c --catalog-role cr
     """
 
     privileges_subcommand: str
@@ -50,13 +54,15 @@ class PrivilegesCommand(Command):
 
     def validate(self):
         if not self.catalog_name:
-            raise Exception('Missing required argument: --catalog')
+            raise Exception(f'Missing required argument: {Argument.to_flag_name(Arguments.CATALOG)}')
         if not self.catalog_role_name:
-            raise Exception('Missing required argument: --catalog-role')
+            raise Exception(f'Missing required argument: {Argument.to_flag_name(Arguments.CATALOG_ROLE)}')
 
+        if not self.privileges_subcommand:
+            raise Exception('A subcommand must be provided')
         if (self.privileges_subcommand in {Subcommands.NAMESPACE, Subcommands.TABLE, Subcommands.VIEW}
                 and not self.namespace):
-            raise Exception('Missing required argument: --namespace')
+            raise Exception(f'Missing required argument: {Argument.to_flag_name(Arguments.NAMESPACE)}')
 
         if self.action == Actions.GRANT and self.cascade:
             raise Exception('Unrecognized argument for GRANT: --cascade')

@@ -1,29 +1,33 @@
 #
-# Copyright (c) 2024 Snowflake Computing Inc.
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 #
 from enum import Enum
 
 
 class StorageType(Enum):
     """
-    Represents a Storage Type within the Polaris API -- `s3`, `azure`, or `gcs`.
+    Represents a Storage Type within the Polaris API -- `s3`, `azure`, `gcs`, or `file`.
     """
 
     S3 = 's3'
     AZURE = 'azure'
     GCS = 'gcs'
+    FILE = 'file'
 
 
 class CatalogType(Enum):
@@ -53,6 +57,7 @@ class Commands:
     PRINCIPAL_ROLES = 'principal-roles'
     CATALOG_ROLES = 'catalog-roles'
     PRIVILEGES = 'privileges'
+    NAMESPACES = 'namespaces'
 
 
 class Subcommands:
@@ -112,11 +117,20 @@ class Arguments:
     CLIENT_ID = 'client_id'
     PRINCIPAL_ROLE = 'principal_role'
     PROPERTY = 'property'
+    SET_PROPERTY = 'set_property'
+    REMOVE_PROPERTY = 'remove_property'
     PRIVILEGE = 'privilege'
     NAMESPACE = 'namespace'
     TABLE = 'table'
     VIEW = 'view'
     CASCADE = 'cascade'
+    CLIENT_SECRET = 'client_secret'
+    ACCESS_TOKEN = 'access_token'
+    HOST = 'host'
+    PORT = 'port'
+    BASE_URL = 'base_url'
+    PARENT = 'parent'
+    LOCATION = 'location'
 
 
 class Hints:
@@ -128,6 +142,13 @@ class Hints:
 
     PROPERTY = ('A key/value pair such as: tag=value. Multiple can be provided by specifying this option'
                 ' more than once')
+    SET_PROPERTY = ('A key/value pair such as: tag=value. Merges the specified key/value into an existing'
+                    ' properties map by updating the value if the key already exists or creating a new'
+                    ' entry if not. Multiple can be provided by specifying this option more than once')
+    REMOVE_PROPERTY = ('A key to remove from a properties map. If the key already does not exist then'
+                       ' no action is takn for the specified key. If properties are also being set in'
+                       ' the same update command then the list of removals is applied last. Multiple'
+                       ' can be provided by specifying this option more than once')
 
     class Catalogs:
         GRANT = 'Grant a catalog role to a catalog'
@@ -135,24 +156,28 @@ class Hints:
 
         class Create:
             TYPE = 'The type of catalog to create in [INTERNAL, EXTERNAL]. INTERNAL by default.'
-            REMOTE_URL = '(Only for external catalogs) The remote URL to use'
-            DEFAULT_BASE_LOCATION = '(Required for internal catalogs) Default base location of the catalog'
-            STORAGE_TYPE = '(Required for internal catalogs) The type of storage to use for the catalog'
-            ALLOWED_LOCATION = ('(For internal catalogs) An allowed location for files tracked by the catalog. '
+            REMOTE_URL = '(For external catalogs) The remote URL to use'
+            DEFAULT_BASE_LOCATION = '(Required) Default base location of the catalog'
+            STORAGE_TYPE = '(Required) The type of storage to use for the catalog'
+            ALLOWED_LOCATION = ('An allowed location for files tracked by the catalog. '
                                 'Multiple locations can be provided by specifying this option more than once.')
 
-            ROLE_ARN = '(Required for AWS) A role ARN to use when connecting to S3'
-            EXTERNAL_ID = '(Only for AWS) The external Id to use when connecting to S3'
-            USER_ARN = '(Only for AWS) A user ARN to use when connecting to S3'
+            ROLE_ARN = '(Required for S3) A role ARN to use when connecting to S3'
+            EXTERNAL_ID = '(Only for S3) The external ID to use when connecting to S3'
+            USER_ARN = '(Only for S3) A user ARN to use when connecting to S3'
 
             TENANT_ID = '(Required for Azure) A tenant ID to use when connecting to Azure Storage'
             MULTI_TENANT_APP_NAME = '(Only for Azure) The app name to use when connecting to Azure Storage'
             CONSENT_URL = '(Only for Azure) A consent URL granting permissions for the Azure Storage location'
 
-            SERVICE_ACCOUNT = '(Only for GCP) The service account to use when connecting to GCS'
+            SERVICE_ACCOUNT = '(Only for GCS) The service account to use when connecting to GCS'
+
+        class Update:
+            DEFAULT_BASE_LOCATION = 'A new default base location for the catalog'
 
     class Principals:
         class Create:
+            TYPE = 'The type of principal to create in [SERVICE]'
             NAME = 'The principal name'
             CLIENT_ID = 'The output-only OAuth clientId associated with this principal if applicable'
 
@@ -179,14 +204,11 @@ class Hints:
                               ' principal.')
 
     class CatalogRoles:
-        CATALOG_NAME = 'The name of a catalog'
+        CATALOG_NAME = 'The name of an existing catalog'
         CATALOG_ROLE = 'The name of a catalog role'
         LIST = 'List catalog roles within a catalog. Optionally, specify a principal role.'
         REVOKE_CATALOG_ROLE = 'Revoke a catalog role from a principal role'
         GRANT_CATALOG_ROLE = 'Grant a catalog role to a principal role'
-
-        class Create:
-            CATALOG_NAME = 'The name of an existing catalog'
 
     class Grant:
         CATALOG_NAME = 'The name of a catalog'
@@ -195,6 +217,15 @@ class Hints:
         NAMESPACE = 'A period-delimited namespace'
         TABLE = 'The name of a table'
         VIEW = 'The name of a view'
-        ADD = 'Add a grant. Either this or --revoke must be specified except when the subcommand is `list`'
-        REVOKE = 'Revoke a grant. Either this or --add must be specified except when the subcommand is `list`'
         CASCADE = 'When revoking privileges, additionally revoke privileges that depend on the specified privilege'
+
+    class Namespaces:
+        LOCATION = 'If specified, the location at which to store the namespace and entities inside it'
+        PARENT = 'If specified, list namespaces inside this parent namespace'
+
+
+UNIT_SEPARATOR = chr(0x1F)
+CLIENT_ID_ENV = 'CLIENT_ID'
+CLIENT_SECRET_ENV = 'CLIENT_SECRET'
+DEFAULT_HOSTNAME = 'localhost'
+DEFAULT_PORT = 8181

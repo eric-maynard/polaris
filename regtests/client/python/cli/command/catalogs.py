@@ -1,17 +1,20 @@
 #
-# Copyright (c) 2024 Snowflake Computing Inc.
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 #
 from dataclasses import dataclass, field
 from typing import Dict, Optional, List
@@ -19,7 +22,8 @@ from typing import Dict, Optional, List
 from pydantic import StrictStr
 
 from cli.command import Command
-from cli.constants import StorageType, CatalogType, Subcommands
+from cli.constants import StorageType, CatalogType, Subcommands, Arguments
+from cli.options.option_tree import Argument
 from polaris.management import PolarisDefaultApi, Catalog, CreateCatalogRequest, UpdateCatalogRequest, \
     StorageConfigInfo, ExternalCatalog, AwsStorageConfigInfo, AzureStorageConfigInfo, GcpStorageConfigInfo, \
     PolarisCatalog, CatalogProperties
@@ -53,39 +57,48 @@ class CatalogsCommand(Command):
     service_account: str
     catalog_name: str
     properties: Dict[str, StrictStr]
+    set_properties: Dict[str, StrictStr]
+    remove_properties: List[str]
 
     def validate(self):
         if self.catalogs_subcommand == Subcommands.CREATE:
             if not self.storage_type:
-                raise Exception(f"Missing required argument:"
-                                f" --storage-type")
+                raise Exception(f'Missing required argument:'
+                                f' {Argument.to_flag_name(Arguments.STORAGE_TYPE)}')
             if not self.default_base_location:
-                raise Exception(f"Missing required argument:"
-                                f" --default-base-location")
-            if self.catalog_type == CatalogType.EXTERNAL.value:
-                if not self.remote_url:
-                    raise Exception(f"Missing required argument for {CatalogType.EXTERNAL.value} catalog:"
-                                    f" --remote-url")
+                raise Exception(f'Missing required argument:'
+                                f' {Argument.to_flag_name(Arguments.DEFAULT_BASE_LOCATION)}')
         if self.catalogs_subcommand == Subcommands.UPDATE:
             if self.allowed_locations:
                 if not self.storage_type:
-                    raise Exception(f"Missing required argument when updating allowed locations for a catalog:"
-                                    f" --storage-type")
+                    raise Exception(f'Missing required argument when updating allowed locations for a catalog:'
+                                    f' {Argument.to_flag_name(Arguments.STORAGE_TYPE)}')
 
         if self.storage_type == StorageType.S3.value:
             if not self.role_arn:
-                raise Exception("Missing required argument for storage type 's3': --role-arn")
+                raise Exception(f"Missing required argument for storage type 's3':"
+                                f" {Argument.to_flag_name(Arguments.ROLE_ARN)}")
             if self._has_azure_storage_info() or self._has_gcs_storage_info():
-                raise Exception("Storage type 's3' supports the storage configurations --role-arn, "
-                                "--external-id, and --user-arn")
+                raise Exception(f"Storage type 's3' supports the storage credentials"
+                                f" {Argument.to_flag_name(Arguments.ROLE_ARN)},"
+                                f" {Argument.to_flag_name(Arguments.EXTERNAL_ID)}, and"
+                                f" {Argument.to_flag_name(Arguments.USER_ARN)}")
         elif self.storage_type == StorageType.AZURE.value:
             if not self.tenant_id:
-                raise Exception("Missing required argument for storage type 'azure': --tenant-id")
+                raise Exception("Missing required argument for storage type 'azure': "
+                                f" {Argument.to_flag_name(Arguments.TENANT_ID)}")
             if self._has_aws_storage_info() or self._has_gcs_storage_info():
-                raise Exception("Storage type 'azure' supports the storage configurations --tenant-id, "
-                                "--multi-tenant-app-name, and --consent-url")
-        elif self._has_aws_storage_info() or self._has_azure_storage_info():
-            raise Exception("Storage type 'gcs' supports the storage configuration: --service-account")
+                raise Exception("Storage type 'azure' supports the storage credentials"
+                                f" {Argument.to_flag_name(Arguments.TENANT_ID)},"
+                                f" {Argument.to_flag_name(Arguments.MULTI_TENANT_APP_NAME)}, and"
+                                f" {Argument.to_flag_name(Arguments.CONSENT_URL)}")
+        elif self.storage_type == StorageType.GCS.value:
+            if self._has_aws_storage_info() or self._has_azure_storage_info():
+                raise Exception("Storage type 'gcs' supports the storage credential"
+                                f" {Argument.to_flag_name(Arguments.SERVICE_ACCOUNT)}")
+        elif self.storage_type == StorageType.FILE.value:
+            if self._has_aws_storage_info() or self._has_azure_storage_info() or self._has_gcs_storage_info():
+                raise Exception("Storage type 'file' does not support any storage credentials")
 
     def _has_aws_storage_info(self):
         return self.role_arn or self.external_id or self.user_arn
@@ -118,8 +131,12 @@ class CatalogsCommand(Command):
             config = GcpStorageConfigInfo(
                 storage_type=self.storage_type.upper(),
                 allowed_locations=self.allowed_locations,
-                tenant_id=self.tenant_id,
-                multi_tenant_app_name=self.multi_tenant_app_name
+                gcs_service_account=self.service_account
+            )
+        elif self.storage_type == StorageType.FILE.value:
+            config = StorageConfigInfo(
+                storage_type=self.storage_type.upper(),
+                allowed_locations=self.allowed_locations
             )
         return config
 
@@ -161,24 +178,38 @@ class CatalogsCommand(Command):
                 print(catalog.to_json())
         elif self.catalogs_subcommand == Subcommands.UPDATE:
             catalog = api.get_catalog(self.catalog_name)
-            default_base_location_properties = {}
-            if self.default_base_location:
-                default_base_location_properties = {'default-base-location': self.default_base_location}
-            catalog.properties = {**default_base_location_properties, **self.properties}
 
-            request = UpdateCatalogRequest(
-                current_entity_version=catalog.entity_version,
-                catalog=catalog
-            )
-            if (self.allowed_locations or self._has_aws_storage_info() or self._has_azure_storage_info() or
-                    self._has_gcs_storage_info()):
+            if self.default_base_location or self.set_properties or self.remove_properties:
+                new_default_base_location = self.default_base_location or catalog.properties.default_base_location
+                new_additional_properties = catalog.properties.additional_properties or {}
+
+                # Add or update all entries specified in set_properties
+                if self.set_properties:
+                    new_additional_properties = {**new_additional_properties, **self.set_properties}
+
+                # Remove all keys specified in remove_properties
+                if self.remove_properties:
+                    for to_remove in self.remove_properties:
+                        new_additional_properties.pop(to_remove, None)
+
+                catalog.properties = CatalogProperties(
+                    default_base_location=new_default_base_location,
+                    additional_properties=new_additional_properties
+                )
+            if (self._has_aws_storage_info() or self._has_azure_storage_info() or self._has_gcs_storage_info() or
+                    self.allowed_locations or self.default_base_location):
                 request = UpdateCatalogRequest(
                     current_entity_version=catalog.entity_version,
-                    catalog=catalog,
+                    properties=catalog.properties.to_dict(),
                     storage_config_info=self._build_storage_config_info()
+                )
+            else:
+                request = UpdateCatalogRequest(
+                    current_entity_version=catalog.entity_version,
+                    properties=catalog.properties.to_dict()
                 )
 
             api.update_catalog(self.catalog_name, request)
         else:
-            raise Exception(f"{self.catalogs_subcommand} is not supported in the CLI")
+            raise Exception(f'{self.catalogs_subcommand} is not supported in the CLI')
 

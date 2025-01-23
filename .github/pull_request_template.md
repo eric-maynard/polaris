@@ -1,41 +1,24 @@
-# Description
+<!--
+    Possible security vulnerabilities: STOP here and contact security@apache.org instead!
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.
+    Please update the title of the PR with a meaningful message - do not leave it "empty" or "generated"
+    Please update this summary field:
 
-Fixes # (issue)
+    The summary should cover these topics, if applicable:
+    * the motivation for the change
+    * a description of the status quo, for example the current behavior
+    * the desired behavior
+    * etc
 
-## Type of change
+    PR checklist:
+    - Do a self-review of your code before opening a pull request
+    - Make sure that there's good test coverage for the changes included in this PR
+    - Run tests locally before pushing a PR (./gradlew check)
+    - Code should have comments where applicable. Particularly hard-to-understand
+      areas deserve good in-line documentation.
+    - Include changes and enhancements to the documentation (in site/content/in-dev/unreleased)
+    - For Work In Progress Pull Requests, please use the Draft PR feature.
 
-Please delete options that are not relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-
-# How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
-
-- [ ] Test A
-- [ ] Test B
-
-**Test Configuration**:
-* Firmware version:
-* Hardware:
-* Toolchain:
-* SDK:
-
-# Checklist:
-
-Please delete options that are not relevant.
-
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
-- [ ] If adding new functionality, I have discussed my implementation with the community using the linked GitHub issue
-- [ ] I have signed and submitted the [ICLA](https://github.com/polaris-catalog/polaris/blob/main/ICLA.md) and if needed, the [CCLA](https://github.com/polaris-catalog/polaris/blob/main/CCLA.md). See [Contributing](https://github.com/polaris-catalog/polaris/blob/main/CONTRIBUTING.md) for details. 
+    Make sure to add the information BELOW this comment.
+    Everything in this comment will NOT be added to the PR description.
+-->
