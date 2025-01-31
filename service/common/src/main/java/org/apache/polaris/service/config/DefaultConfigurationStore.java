@@ -19,12 +19,14 @@
 package org.apache.polaris.service.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.Map;
+import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.PolarisConfigurationStore;
-import org.apache.polaris.core.context.RealmId;
+import org.apache.polaris.core.context.CallContext;
 
 @ApplicationScoped
 public class DefaultConfigurationStore implements PolarisConfigurationStore {
@@ -53,14 +55,14 @@ public class DefaultConfigurationStore implements PolarisConfigurationStore {
   }
 
   @Override
-  public <T> @Nullable T getConfiguration(@Nullable RealmId realmId, String configName) {
-    Object rawValue = defaults.get(configName);
-    if (realmId != null) {
-      rawValue =
-          realmOverrides.getOrDefault(realmId.id(), Map.of()).getOrDefault(configName, rawValue);
-    }
+  public <T> @Nullable T getConfiguration(@Nonnull PolarisCallContext ctx, String configName) {
+    String realm = CallContext.getCurrentContext().getRealmContext().getRealmIdentifier();
     @SuppressWarnings("unchecked")
-    T value = (T) rawValue;
-    return value;
+    T confgValue =
+        (T)
+            realmOverrides
+                .getOrDefault(realm, Map.of())
+                .getOrDefault(configName, defaults.get(configName));
+    return confgValue;
   }
 }

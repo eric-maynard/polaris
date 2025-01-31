@@ -22,34 +22,30 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.polaris.core.PolarisDiagnostics;
-import org.apache.polaris.core.context.RealmId;
+import org.apache.polaris.core.context.RealmContext;
 import org.apache.polaris.core.persistence.MetaStoreManagerFactory;
 import org.apache.polaris.core.persistence.PolarisEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Gets or creates PolarisEntityManager instances based on config values and RealmId. */
+/** Gets or creates PolarisEntityManager instances based on config values and RealmContext. */
 @ApplicationScoped
 public class RealmEntityManagerFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RealmEntityManagerFactory.class);
 
   private final MetaStoreManagerFactory metaStoreManagerFactory;
-  private final PolarisDiagnostics diagnostics;
 
   // Key: realmIdentifier
   private final Map<String, PolarisEntityManager> cachedEntityManagers = new ConcurrentHashMap<>();
 
   @Inject
-  public RealmEntityManagerFactory(
-      MetaStoreManagerFactory metaStoreManagerFactory, PolarisDiagnostics diagnostics) {
+  public RealmEntityManagerFactory(MetaStoreManagerFactory metaStoreManagerFactory) {
     this.metaStoreManagerFactory = metaStoreManagerFactory;
-    this.diagnostics = diagnostics;
   }
 
-  public PolarisEntityManager getOrCreateEntityManager(RealmId context) {
-    String realm = context.id();
+  public PolarisEntityManager getOrCreateEntityManager(RealmContext context) {
+    String realm = context.getRealmIdentifier();
 
     LOGGER.debug("Looking up PolarisEntityManager for realm {}", realm);
 
@@ -60,8 +56,7 @@ public class RealmEntityManagerFactory {
           return new PolarisEntityManager(
               metaStoreManagerFactory.getOrCreateMetaStoreManager(context),
               metaStoreManagerFactory.getOrCreateStorageCredentialCache(context),
-              metaStoreManagerFactory.getOrCreateEntityCache(context),
-              diagnostics);
+              metaStoreManagerFactory.getOrCreateEntityCache(context));
         });
   }
 }

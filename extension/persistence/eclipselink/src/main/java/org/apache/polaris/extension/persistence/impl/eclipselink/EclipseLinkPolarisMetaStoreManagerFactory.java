@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.time.Clock;
 import org.apache.polaris.core.PolarisConfigurationStore;
 import org.apache.polaris.core.PolarisDiagnostics;
-import org.apache.polaris.core.context.RealmId;
+import org.apache.polaris.core.context.RealmContext;
 import org.apache.polaris.core.persistence.LocalPolarisMetaStoreManagerFactory;
 import org.apache.polaris.core.persistence.PolarisCredentialsBootstrap;
 import org.apache.polaris.core.persistence.PolarisMetaStoreManager;
@@ -44,23 +44,12 @@ import org.apache.polaris.core.storage.PolarisStorageIntegrationProvider;
 public class EclipseLinkPolarisMetaStoreManagerFactory
     extends LocalPolarisMetaStoreManagerFactory<PolarisEclipseLinkStore> {
 
-  private final EclipseLinkConfiguration eclipseLinkConfiguration;
-  private final PolarisStorageIntegrationProvider storageIntegrationProvider;
+  @Inject EclipseLinkConfiguration eclipseLinkConfiguration;
+  @Inject PolarisStorageIntegrationProvider storageIntegrationProvider;
 
-  public EclipseLinkPolarisMetaStoreManagerFactory() {
-    this(null, null, null, null, null);
-  }
-
-  @Inject
-  public EclipseLinkPolarisMetaStoreManagerFactory(
-      EclipseLinkConfiguration eclipseLinkConfiguration,
-      PolarisStorageIntegrationProvider storageIntegrationProvider,
-      PolarisConfigurationStore configurationStore,
-      PolarisDiagnostics diagnostics,
-      Clock clock) {
+  protected EclipseLinkPolarisMetaStoreManagerFactory(
+      PolarisConfigurationStore configurationStore, PolarisDiagnostics diagnostics, Clock clock) {
     super(configurationStore, diagnostics, clock);
-    this.eclipseLinkConfiguration = eclipseLinkConfiguration;
-    this.storageIntegrationProvider = storageIntegrationProvider;
   }
 
   @Override
@@ -71,16 +60,16 @@ public class EclipseLinkPolarisMetaStoreManagerFactory
   @Override
   protected PolarisMetaStoreSession createMetaStoreSession(
       @Nonnull PolarisEclipseLinkStore store,
-      @Nonnull RealmId realmId,
+      @Nonnull RealmContext realmContext,
       @Nullable PolarisCredentialsBootstrap credentialsBootstrap,
       @Nonnull PolarisDiagnostics diagnostics) {
     return new PolarisEclipseLinkMetaStoreSessionImpl(
         store,
         storageIntegrationProvider,
-        realmId,
+        realmContext,
         configurationFile(),
         persistenceUnitName(),
-        secretsGenerator(realmId, credentialsBootstrap),
+        secretsGenerator(realmContext, credentialsBootstrap),
         diagnostics);
   }
 

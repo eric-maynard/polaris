@@ -16,28 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.polaris.core.context;
+package org.apache.polaris.service.context;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.polaris.immutables.PolarisImmutable;
-import org.immutables.value.Value;
+import jakarta.ws.rs.core.SecurityContext;
+import org.apache.iceberg.catalog.Catalog;
+import org.apache.polaris.core.auth.AuthenticatedPolarisPrincipal;
+import org.apache.polaris.core.context.CallContext;
+import org.apache.polaris.core.persistence.resolver.PolarisResolutionManifest;
 
-/**
- * Represents the ID of the realm used in a REST request associated with routing to independent and
- * isolated "universes".
- */
-@PolarisImmutable
-@JsonSerialize(as = ImmutableRealmId.class)
-@JsonDeserialize(as = ImmutableRealmId.class)
-public interface RealmId {
-
-  static RealmId newRealmId(String id) {
-    return ImmutableRealmId.of(id);
-  }
-
-  @Value.Parameter
-  @JsonValue
-  String id();
+public interface CallContextCatalogFactory {
+  Catalog createCallContextCatalog(
+      CallContext context,
+      AuthenticatedPolarisPrincipal authenticatedPrincipal,
+      SecurityContext securityContext,
+      PolarisResolutionManifest resolvedManifest);
 }

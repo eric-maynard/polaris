@@ -136,6 +136,7 @@ dependencies {
 
   // override dnsjava version in dependencies due to https://github.com/dnsjava/dnsjava/issues/329
   intTestImplementation(platform(libs.dnsjava))
+  testFixturesImplementation(platform(libs.dnsjava))
 
   // required for QuarkusSparkIT
   intTestImplementation(enforcedPlatform(libs.scala212.lang.library))
@@ -162,6 +163,9 @@ tasks.named<Test>("test").configure { maxParallelForks = 4 }
 
 tasks.named<Test>("intTest").configure {
   maxParallelForks = 1
+  // Same issue as above: allow a java security manager after Java 21
+  // (this setting is for the application under test, while the setting above is for test code).
+  systemProperty("quarkus.test.arg-line", "-Djava.security.manager=allow")
   val logsDir = project.layout.buildDirectory.get().asFile.resolve("logs")
   // delete files from previous runs
   doFirst {

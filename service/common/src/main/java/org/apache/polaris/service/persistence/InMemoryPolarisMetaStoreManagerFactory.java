@@ -24,15 +24,15 @@ import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.Clock;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Supplier;
 import org.apache.polaris.core.PolarisConfigurationStore;
 import org.apache.polaris.core.PolarisDiagnostics;
 import org.apache.polaris.core.auth.PolarisSecretsManager.PrincipalSecretsResult;
-import org.apache.polaris.core.context.RealmId;
+import org.apache.polaris.core.context.RealmContext;
 import org.apache.polaris.core.persistence.LocalPolarisMetaStoreManagerFactory;
 import org.apache.polaris.core.persistence.PolarisCredentialsBootstrap;
 import org.apache.polaris.core.persistence.PolarisMetaStoreManager;
@@ -48,19 +48,18 @@ public class InMemoryPolarisMetaStoreManagerFactory
     extends LocalPolarisMetaStoreManagerFactory<PolarisTreeMapStore> {
 
   private final PolarisStorageIntegrationProvider storageIntegration;
-  private final Set<String> bootstrappedRealms = new CopyOnWriteArraySet<>();
+  private final Set<String> bootstrappedRealms = new HashSet<>();
 
   public InMemoryPolarisMetaStoreManagerFactory() {
-    this(null, null, null, null);
+    this(null, null, null);
   }
 
   @Inject
   public InMemoryPolarisMetaStoreManagerFactory(
       PolarisStorageIntegrationProvider storageIntegration,
       PolarisConfigurationStore configurationStore,
-      PolarisDiagnostics diagnostics,
-      Clock clock) {
-    super(configurationStore, diagnostics, clock);
+      PolarisDiagnostics diagnostics) {
+    super(configurationStore, diagnostics, Clock.systemDefaultZone());
     this.storageIntegration = storageIntegration;
   }
 
@@ -76,28 +75,31 @@ public class InMemoryPolarisMetaStoreManagerFactory
   @Override
   protected PolarisMetaStoreSession createMetaStoreSession(
       @Nonnull PolarisTreeMapStore store,
-      @Nonnull RealmId realmId,
+      @Nonnull RealmContext realmContext,
       @Nullable PolarisCredentialsBootstrap credentialsBootstrap,
       @Nonnull PolarisDiagnostics diagnostics) {
     return new PolarisTreeMapMetaStoreSessionImpl(
-        store, storageIntegration, secretsGenerator(realmId, credentialsBootstrap), diagnostics);
+        store, storageIntegration, secretsGenerator(realmContext, credentialsBootstrap));
   }
 
   @Override
-  public synchronized PolarisMetaStoreManager getOrCreateMetaStoreManager(RealmId realmId) {
-    if (!bootstrappedRealms.contains(realmId.id())) {
-      bootstrapRealmsAndPrintCredentials(List.of(realmId.id()));
+  public synchronized PolarisMetaStoreManager getOrCreateMetaStoreManager(
+      RealmContext realmContext) {
+    String realmId = realmContext.getRealmIdentifier();
+    if (!bootstrappedRealms.contains(realmId)) {
+      bootstrapRealmsAndPrintCredentials(List.of(realmId));
     }
-    return super.getOrCreateMetaStoreManager(realmId);
+    return super.getOrCreateMetaStoreManager(realmContext);
   }
 
   @Override
   public synchronized Supplier<PolarisMetaStoreSession> getOrCreateSessionSupplier(
-      RealmId realmId) {
-    if (!bootstrappedRealms.contains(realmId.id())) {
-      bootstrapRealmsAndPrintCredentials(List.of(realmId.id()));
+      RealmContext realmContext) {
+    String realmId = realmContext.getRealmIdentifier();
+    if (!bootstrappedRealms.contains(realmId)) {
+      bootstrapRealmsAndPrintCredentials(List.of(realmId));
     }
-    return super.getOrCreateSessionSupplier(realmId);
+    return super.getOrCreateSessionSupplier(realmContext);
   }
 
   private void bootstrapRealmsAndPrintCredentials(List<String> realms) {
