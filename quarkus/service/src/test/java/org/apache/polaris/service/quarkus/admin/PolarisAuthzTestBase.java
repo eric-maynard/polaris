@@ -69,9 +69,12 @@ import org.apache.polaris.service.admin.PolarisAdminService;
 import org.apache.polaris.service.catalog.BasePolarisCatalog;
 import org.apache.polaris.service.catalog.PolarisPassthroughResolutionView;
 import org.apache.polaris.service.catalog.io.DefaultFileIOFactory;
-import org.apache.polaris.service.catalog.io.FileIOFactory;
 import org.apache.polaris.service.config.DefaultConfigurationStore;
 import org.apache.polaris.service.config.RealmEntityManagerFactory;
+<<<<<<< HEAD
+=======
+import org.apache.polaris.service.quarkus.catalog.PolarisPassthroughResolutionView;
+>>>>>>> parent of b5a5633a (Revert "Remove CallContextCatalogFactory (#592)")
 import org.apache.polaris.service.storage.PolarisStorageIntegrationProviderImpl;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
