@@ -181,6 +181,15 @@ tasks.named<Test>("intTest").configure {
   addSparkJvmOptions()
 }
 
+tasks.register<Jar>("testJar") {
+  archiveClassifier.set("tests")
+  from(sourceSets.test.get().output)
+}
+
+artifacts {
+  add("testArtifacts", tasks.named("testJar").get())
+}
+
 /**
  * Adds the JPMS options required for Spark to run on Java 17, taken from the
  * `DEFAULT_MODULE_OPTIONS` constant in `org.apache.spark.launcher.JavaModuleOptions`.
