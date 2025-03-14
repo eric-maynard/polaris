@@ -21,13 +21,17 @@ package org.apache.polaris.core.persistence.cache;
 import static org.apache.polaris.core.persistence.PrincipalSecretsGenerator.RANDOM_SECRETS;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
+
+import jakarta.annotation.Nonnull;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.PolarisDefaultDiagServiceImpl;
 import org.apache.polaris.core.PolarisDiagnostics;
 import org.apache.polaris.core.entity.PolarisBaseEntity;
 import org.apache.polaris.core.entity.PolarisEntity;
+import org.apache.polaris.core.entity.PolarisEntityCore;
 import org.apache.polaris.core.entity.PolarisEntitySubType;
 import org.apache.polaris.core.entity.PolarisEntityType;
 import org.apache.polaris.core.entity.PolarisGrantRecord;
@@ -36,6 +40,7 @@ import org.apache.polaris.core.entity.TableLikeEntity;
 import org.apache.polaris.core.persistence.PolarisMetaStoreManager;
 import org.apache.polaris.core.persistence.PolarisTestMetaStoreManager;
 import org.apache.polaris.core.persistence.ResolvedPolarisEntity;
+import org.apache.polaris.core.persistence.dao.entity.ResolvedEntityResult;
 import org.apache.polaris.core.persistence.transactional.PolarisMetaStoreManagerImpl;
 import org.apache.polaris.core.persistence.transactional.PolarisTreeMapMetaStoreSessionImpl;
 import org.apache.polaris.core.persistence.transactional.PolarisTreeMapStore;
@@ -502,5 +507,79 @@ public class EntityCacheTest {
 
     Assertions.assertThat(getEntityWeight(smallEntity)).isLessThan(getEntityWeight(mediumEntity));
     Assertions.assertThat(getEntityWeight(mediumEntity)).isLessThan(getEntityWeight(largeEntity));
+  }
+
+  private class BenchmarkingMetastoreManager extends PolarisMetaStoreManagerImpl {
+
+    private PolarisBaseEntity entity = null;
+    public void setEntity(String name, String properties) {
+      this.entity = new PolarisBaseEntity(1, 1, PolarisEntityType.CATALOG, PolarisEntitySubType.ANY_SUBTYPE, 1, name);
+      this.entity.setProperties(properties);
+    }
+
+    @Override
+    public ResolvedEntityResult loadResolvedEntityByName(
+        @Nonnull PolarisCallContext callCtx,
+        long entityCatalogId,
+        long parentId,
+        @Nonnull PolarisEntityType entityType,
+        @Nonnull String entityName) {
+      return new ResolvedEntityResult(this.entity, 1, List.of());
+    }
+  }
+
+  private static final String ASCII_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  private static final Random random = new Random();
+
+  public static String randomString(int length, boolean asciiOnly) {
+    StringBuilder sb = new StringBuilder(length);
+    if (asciiOnly) {
+      for (int i = 0; i < length; i++) {
+        sb.append(ASCII_CHARS.charAt(random.nextInt(ASCII_CHARS.length())));
+      }
+    } else {
+      for (int i = 0; i < length; i++) {
+        sb.append((char) (random.nextInt(0x7FFF - 0x1000) + 0x1000));
+      }
+    }
+    return sb.toString();
+  }
+
+  long getHeapSize() {
+    return Runtime.getRuntime().totalMemory();
+  }
+
+  @Test
+  void testHeapSize() throws InterruptedException {
+    int rounds = 100000;
+    int printInterval = 100;
+    int trials = 10;
+    boolean[] asciiProperties = {false, true};
+    int[] propertyCharacters = {10, 100, 1000, 10000, 1000000};
+
+    BenchmarkingMetastoreManager manager;
+    EntityCache cache;
+    for(int trial = 0; trial < trials; trial++) {
+      manager = new BenchmarkingMetastoreManager();
+      cache = new EntityCache(manager);
+      System.gc();
+      System.runFinalization();
+      Thread.sleep(2000);
+      long baselineHeapSize = getHeapSize();
+
+      for(boolean useAscii : asciiProperties) {
+        for (int propertyLength : propertyCharacters) {
+          for(int i = 0; i < rounds; i++) {
+            String name = randomString(100, useAscii);
+            manager.setEntity(name, randomString(propertyLength, useAscii));
+            cache.getOrLoadEntityByName(callCtx, new EntityCacheByNameKey(PolarisEntityType.CATALOG, name));
+
+            if (i % printInterval == 0) {
+              System.out.printf("%d,%s,%d,%d,%d\n", trial, useAscii, propertyLength, i, getHeapSize() - baselineHeapSize);
+            }
+          }
+        }
+      }
+    }
   }
 }
