@@ -534,7 +534,7 @@ public class EntityCacheTest {
     int nameSize = 10;
     PolarisBaseEntity entity =
         new PolarisBaseEntity(
-            1, 1, PolarisEntityType.CATALOG, PolarisEntitySubType.ANY_SUBTYPE, 1, randomString(nameSize, useAscii));
+            1, random.nextLong(), PolarisEntityType.CATALOG, PolarisEntitySubType.ANY_SUBTYPE, 1, randomString(nameSize, useAscii));
     entity.setProperties(randomString(characters - nameSize, useAscii));
     return new ResolvedPolarisEntity(
         callCtx.getDiagServices(),
@@ -545,27 +545,28 @@ public class EntityCacheTest {
 
   @Test
   void testHeapSize() throws InterruptedException {
-    long targetCharactersToWrite = 5L * 1000 * 1000 * 1000;
+    long targetCharactersToWrite = 2L * 1000 * 1000 * 1000;
     int printInterval = 100;
-    int trials = 5;
+    int trials = 1;
     boolean[] asciiProperties = {false, true};
-    int[] propertyCharacters = {10, 100, 1000, 10000, 1000000};
+    int[] propertyCharacters = {1000, 10000, 1000000};
 
-    EntityCache cache;
+    EntityCache cache = allocateNewCache();
     for(int trial = 0; trial < trials; trial++) {
-      cache = allocateNewCache();
-      System.gc();
-      System.runFinalization();
-      Thread.sleep(2000);
-      long baselineHeapSize = getHeapSize();
-
       for(boolean useAscii : asciiProperties) {
         for (int propertyLength : propertyCharacters) {
+          cache.cleanup();
+          cache = allocateNewCache();
+          System.gc();
+          System.runFinalization();
+          Thread.sleep(2000);
+          long baselineHeapSize = getHeapSize();
+
           for(int i = 0; i < targetCharactersToWrite / (propertyLength + 100); i++) {
             cache.cacheNewEntry(buildResolvedEntity(propertyLength, useAscii));
 
             if (i % printInterval == 0) {
-              System.out.printf("%d,%s,%d,%d,%d\n", trial, useAscii, propertyLength, i, getHeapSize() - baselineHeapSize);
+              System.out.printf("%d,%s,%d,%d,%d,%d\n", trial, useAscii, propertyLength, i, getHeapSize() - baselineHeapSize, cache.estimatedSize());
             }
           }
         }

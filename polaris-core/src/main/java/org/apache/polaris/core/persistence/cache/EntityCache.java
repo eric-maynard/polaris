@@ -471,4 +471,12 @@ public class EntityCache {
     // return what we found
     return new EntityCacheLookupResult(entry, cacheHit);
   }
+
+  public void cleanup() {
+    this.byId.cleanUp();
+  }
+
+  public long estimatedSize() {
+    return this.byId.estimatedSize();
+  }
 }
