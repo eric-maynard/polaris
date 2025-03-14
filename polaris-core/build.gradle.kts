@@ -109,3 +109,8 @@ dependencies {
 }
 
 tasks.named("javadoc") { dependsOn("jandex") }
+
+tasks.withType<Test> {
+  maxHeapSize = "2g"
+  jvmArgs = listOf("-Xmx2g", "-XX:+UseG1GC")
+}

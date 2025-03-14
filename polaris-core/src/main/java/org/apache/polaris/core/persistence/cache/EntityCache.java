@@ -116,7 +116,7 @@ public class EntityCache {
    *
    * @param cacheEntry new cache entry
    */
-  private void cacheNewEntry(@Nonnull ResolvedPolarisEntity cacheEntry) {
+  public void cacheNewEntry(@Nonnull ResolvedPolarisEntity cacheEntry) {
 
     // compute name key
     EntityCacheByNameKey nameKey = new EntityCacheByNameKey(cacheEntry.getEntity());

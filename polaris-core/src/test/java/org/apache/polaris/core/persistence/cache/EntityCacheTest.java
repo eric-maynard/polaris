@@ -509,25 +509,6 @@ public class EntityCacheTest {
     Assertions.assertThat(getEntityWeight(mediumEntity)).isLessThan(getEntityWeight(largeEntity));
   }
 
-  private class BenchmarkingMetastoreManager extends PolarisMetaStoreManagerImpl {
-
-    private PolarisBaseEntity entity = null;
-    public void setEntity(String name, String properties) {
-      this.entity = new PolarisBaseEntity(1, 1, PolarisEntityType.CATALOG, PolarisEntitySubType.ANY_SUBTYPE, 1, name);
-      this.entity.setProperties(properties);
-    }
-
-    @Override
-    public ResolvedEntityResult loadResolvedEntityByName(
-        @Nonnull PolarisCallContext callCtx,
-        long entityCatalogId,
-        long parentId,
-        @Nonnull PolarisEntityType entityType,
-        @Nonnull String entityName) {
-      return new ResolvedEntityResult(this.entity, 1, List.of());
-    }
-  }
-
   private static final String ASCII_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   private static final Random random = new Random();
 
@@ -546,22 +527,33 @@ public class EntityCacheTest {
   }
 
   long getHeapSize() {
-    return Runtime.getRuntime().totalMemory();
+    return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+  }
+
+  private ResolvedPolarisEntity buildResolvedEntity(int characters, boolean useAscii) {
+    int nameSize = 10;
+    PolarisBaseEntity entity =
+        new PolarisBaseEntity(
+            1, 1, PolarisEntityType.CATALOG, PolarisEntitySubType.ANY_SUBTYPE, 1, randomString(nameSize, useAscii));
+    entity.setProperties(randomString(characters - nameSize, useAscii));
+    return new ResolvedPolarisEntity(
+        callCtx.getDiagServices(),
+        entity,
+        List.of(),
+        1);
   }
 
   @Test
   void testHeapSize() throws InterruptedException {
-    int rounds = 100000;
+    long targetCharactersToWrite = 5L * 1000 * 1000 * 1000;
     int printInterval = 100;
-    int trials = 10;
+    int trials = 5;
     boolean[] asciiProperties = {false, true};
     int[] propertyCharacters = {10, 100, 1000, 10000, 1000000};
 
-    BenchmarkingMetastoreManager manager;
     EntityCache cache;
     for(int trial = 0; trial < trials; trial++) {
-      manager = new BenchmarkingMetastoreManager();
-      cache = new EntityCache(manager);
+      cache = allocateNewCache();
       System.gc();
       System.runFinalization();
       Thread.sleep(2000);
@@ -569,10 +561,8 @@ public class EntityCacheTest {
 
       for(boolean useAscii : asciiProperties) {
         for (int propertyLength : propertyCharacters) {
-          for(int i = 0; i < rounds; i++) {
-            String name = randomString(100, useAscii);
-            manager.setEntity(name, randomString(propertyLength, useAscii));
-            cache.getOrLoadEntityByName(callCtx, new EntityCacheByNameKey(PolarisEntityType.CATALOG, name));
+          for(int i = 0; i < targetCharactersToWrite / (propertyLength + 100); i++) {
+            cache.cacheNewEntry(buildResolvedEntity(propertyLength, useAscii));
 
             if (i % printInterval == 0) {
               System.out.printf("%d,%s,%d,%d,%d\n", trial, useAscii, propertyLength, i, getHeapSize() - baselineHeapSize);
