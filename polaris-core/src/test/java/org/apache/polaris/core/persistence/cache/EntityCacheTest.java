@@ -23,15 +23,12 @@ import static org.apache.polaris.core.persistence.PrincipalSecretsGenerator.RAND
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
-
-import jakarta.annotation.Nonnull;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.PolarisDefaultDiagServiceImpl;
 import org.apache.polaris.core.PolarisDiagnostics;
 import org.apache.polaris.core.entity.PolarisBaseEntity;
 import org.apache.polaris.core.entity.PolarisEntity;
-import org.apache.polaris.core.entity.PolarisEntityCore;
 import org.apache.polaris.core.entity.PolarisEntitySubType;
 import org.apache.polaris.core.entity.PolarisEntityType;
 import org.apache.polaris.core.entity.PolarisGrantRecord;
@@ -40,7 +37,6 @@ import org.apache.polaris.core.entity.TableLikeEntity;
 import org.apache.polaris.core.persistence.PolarisMetaStoreManager;
 import org.apache.polaris.core.persistence.PolarisTestMetaStoreManager;
 import org.apache.polaris.core.persistence.ResolvedPolarisEntity;
-import org.apache.polaris.core.persistence.dao.entity.ResolvedEntityResult;
 import org.apache.polaris.core.persistence.transactional.PolarisMetaStoreManagerImpl;
 import org.apache.polaris.core.persistence.transactional.PolarisTreeMapMetaStoreSessionImpl;
 import org.apache.polaris.core.persistence.transactional.PolarisTreeMapStore;
@@ -536,13 +532,14 @@ public class EntityCacheTest {
     int nameSize = 10;
     PolarisBaseEntity entity =
         new PolarisBaseEntity(
-            1, random.nextLong(), PolarisEntityType.CATALOG, PolarisEntitySubType.ANY_SUBTYPE, 1, randomString(nameSize, useAscii));
+            1,
+            random.nextLong(),
+            PolarisEntityType.CATALOG,
+            PolarisEntitySubType.ANY_SUBTYPE,
+            1,
+            randomString(nameSize, useAscii));
     entity.setProperties(randomString(characters - nameSize, useAscii));
-    return new ResolvedPolarisEntity(
-        callCtx.getDiagServices(),
-        entity,
-        List.of(),
-        1);
+    return new ResolvedPolarisEntity(callCtx.getDiagServices(), entity, List.of(), 1);
   }
 
   @Test
@@ -554,8 +551,8 @@ public class EntityCacheTest {
     int[] propertyCharacters = {100, 1000, 10000, 1000000};
 
     EntityCache cache = allocateNewCache();
-    for(int trial = 0; trial < trials; trial++) {
-      for(boolean useAscii : asciiProperties) {
+    for (int trial = 0; trial < trials; trial++) {
+      for (boolean useAscii : asciiProperties) {
         for (int propertyLength : propertyCharacters) {
           cache.cleanup();
           cache = allocateNewCache();
@@ -564,11 +561,18 @@ public class EntityCacheTest {
           Thread.sleep(2000);
           long baselineHeapSize = getHeapSize();
 
-          for(int i = 0; i < targetCharactersToWrite / (propertyLength + 100); i++) {
+          for (int i = 0; i < targetCharactersToWrite / (propertyLength + 100); i++) {
             cache.cacheNewEntry(buildResolvedEntity(propertyLength, useAscii));
 
             if (i % printInterval == 0) {
-              System.out.printf("%d,%s,%d,%d,%d,%d\n", trial, useAscii, propertyLength, i, getHeapSize() - baselineHeapSize, cache.estimatedSize());
+              System.out.printf(
+                  "%d,%s,%d,%d,%d,%d\n",
+                  trial,
+                  useAscii,
+                  propertyLength,
+                  i,
+                  getHeapSize() - baselineHeapSize,
+                  cache.estimatedSize());
             }
           }
         }
