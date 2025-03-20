@@ -22,18 +22,12 @@ import static org.apache.polaris.core.persistence.PrincipalSecretsGenerator.RAND
 
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
-import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.PolarisDefaultDiagServiceImpl;
 import org.apache.polaris.core.PolarisDiagnostics;
 import org.apache.polaris.core.entity.PolarisBaseEntity;
-import org.apache.polaris.core.entity.PolarisEntity;
 import org.apache.polaris.core.entity.PolarisEntitySubType;
 import org.apache.polaris.core.entity.PolarisEntityType;
-import org.apache.polaris.core.entity.PolarisGrantRecord;
-import org.apache.polaris.core.entity.PolarisPrivilege;
-import org.apache.polaris.core.entity.TableLikeEntity;
 import org.apache.polaris.core.persistence.PolarisMetaStoreManager;
 import org.apache.polaris.core.persistence.PolarisTestMetaStoreManager;
 import org.apache.polaris.core.persistence.ResolvedPolarisEntity;
@@ -41,7 +35,6 @@ import org.apache.polaris.core.persistence.transactional.PolarisMetaStoreManager
 import org.apache.polaris.core.persistence.transactional.PolarisTreeMapMetaStoreSessionImpl;
 import org.apache.polaris.core.persistence.transactional.PolarisTreeMapStore;
 import org.apache.polaris.core.persistence.transactional.TransactionalPersistence;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
