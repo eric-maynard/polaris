@@ -53,12 +53,17 @@ public class EntityCache {
   // index by name
   private final AbstractMap<EntityCacheByNameKey, ResolvedPolarisEntity> byName;
 
+  /** For testing only */
+  private final int multiplier;
+
   /**
    * Constructor. Cache can be private or shared
    *
    * @param polarisMetaStoreManager the meta store manager implementation
    */
-  public EntityCache(@Nonnull PolarisMetaStoreManager polarisMetaStoreManager) {
+  public EntityCache(@Nonnull PolarisMetaStoreManager polarisMetaStoreManager, int multiplier) {
+
+    this.multiplier = multiplier;
 
     // by name cache
     this.byName = new ConcurrentHashMap<>();
@@ -80,7 +85,7 @@ public class EntityCache {
     Caffeine<Long, ResolvedPolarisEntity> byIdBuilder =
         Caffeine.newBuilder()
             .maximumWeight(weigherTarget)
-            .weigher(EntityWeigher.asWeigher())
+            .weigher(EntityWeigher.asWeigher(multiplier))
             .expireAfterAccess(1, TimeUnit.HOURS) // Expire entries after 1 hour of no access
             .removalListener(removalListener); // Set the removal listener
 

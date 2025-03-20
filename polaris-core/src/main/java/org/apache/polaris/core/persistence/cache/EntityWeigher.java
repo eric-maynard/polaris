@@ -28,6 +28,8 @@ import org.checkerframework.checker.index.qual.NonNegative;
  */
 public class EntityWeigher implements Weigher<Long, ResolvedPolarisEntity> {
 
+  private final int multiplier;
+
   /** The amount of weight that is expected to roughly equate to 1MB of memory usage */
   public static final long WEIGHT_PER_MB = 1024 * 1024;
 
@@ -37,14 +39,8 @@ public class EntityWeigher implements Weigher<Long, ResolvedPolarisEntity> {
   /* Represents the amount of bytes that a character is expected to take up */
   private static final int APPROXIMATE_BYTES_PER_CHAR = 3;
 
-  /** Singleton instance */
-  private static final EntityWeigher instance = new EntityWeigher();
-
-  private EntityWeigher() {}
-
-  /** Gets the singleton {@link EntityWeigher} */
-  public static EntityWeigher getInstance() {
-    return instance;
+  private EntityWeigher(int multiplier) {
+    this.multiplier = multiplier;
   }
 
   /**
@@ -57,13 +53,13 @@ public class EntityWeigher implements Weigher<Long, ResolvedPolarisEntity> {
   @Override
   public @NonNegative int weigh(Long key, ResolvedPolarisEntity value) {
     return APPROXIMATE_ENTITY_OVERHEAD
-        + (value.getEntity().getName().length() * APPROXIMATE_BYTES_PER_CHAR)
-        + (value.getEntity().getProperties().length() * APPROXIMATE_BYTES_PER_CHAR)
-        + (value.getEntity().getInternalProperties().length() * APPROXIMATE_BYTES_PER_CHAR);
+        + (value.getEntity().getName().length() * multiplier)
+        + (value.getEntity().getProperties().length() * multiplier)
+        + (value.getEntity().getInternalProperties().length() * multiplier);
   }
 
   /** Factory method to provide a typed Weigher */
-  public static Weigher<Long, ResolvedPolarisEntity> asWeigher() {
-    return getInstance();
+  public static Weigher<Long, ResolvedPolarisEntity> asWeigher(int multiplier) {
+    return new EntityWeigher(multiplier);
   }
 }

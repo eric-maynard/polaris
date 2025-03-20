@@ -59,4 +59,11 @@ public class BehaviorChangeConfiguration<T> extends PolarisConfiguration<T> {
           .description("Whether or not to use soft values in the entity cache")
           .defaultValue(false)
           .buildBehaviorChangeConfiguration();
+
+  public static final FeatureConfiguration<Long> ENTITY_CACHE_WEIGHER_MULTIPLIER =
+      PolarisConfiguration.<Long>builder()
+          .key("TEST_ONLY_ENTITY_CACHE_WEIGHER_MULTIPLIER")
+          .description("The ratio between characters and bytes to use in the entity cache.")
+          .defaultValue(1L)
+          .buildFeatureConfiguration();
 }
