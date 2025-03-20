@@ -170,8 +170,9 @@ public class EntityCacheTest {
 
               if (i % printInterval == 0) {
                 System.out.printf(
-                    "%d,%s,%d,%d,%d,%d\n",
+                    "%d,%d,%s,%d,%d,%d,%d\n",
                     trial,
+                    multiplier,
                     useAscii,
                     propertyLength,
                     i,

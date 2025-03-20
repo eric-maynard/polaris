@@ -123,10 +123,10 @@ public abstract class PolarisConfiguration<T> {
   public static <T> T loadConfig(PolarisConfiguration<T> configuration) {
     var callContext = CallContext.getCurrentContext();
     if (callContext == null) {
-      LOGGER.warn(
-          String.format(
-              "Unable to load current call context; using %s = %s",
-              configuration.key, configuration.defaultValue));
+//      LOGGER.warn(
+//          String.format(
+//              "Unable to load current call context; using %s = %s",
+//              configuration.key, configuration.defaultValue));
       return configuration.defaultValue;
     }
     return callContext

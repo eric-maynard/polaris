@@ -471,7 +471,7 @@ public class ResolverTest {
 
     // create a new cache if needs be
     if (cache == null) {
-      this.cache = new EntityCache(this.metaStoreManager);
+      this.cache = new EntityCache(this.metaStoreManager, 1);
     }
     boolean allRoles = principalRolesScope == null;
     Optional<List<PrincipalRoleEntity>> roleEntities =
