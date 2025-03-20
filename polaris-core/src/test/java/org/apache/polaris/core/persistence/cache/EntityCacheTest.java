@@ -118,8 +118,8 @@ public class EntityCacheTest {
   }
 
   long getHeapSize() {
-    System.gc();
-    System.runFinalization();
+//    System.gc();
+//    System.runFinalization();
     return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
   }
 
@@ -158,7 +158,7 @@ public class EntityCacheTest {
             Thread.sleep(2000);
             long baselineHeapSize = getHeapSize();
 
-            for (int i = 0; i < targetCharactersToWrite / (propertyLength + 100); i++) {
+            for (int i = 0; i < targetCharactersToWrite / propertyLength; i++) {
               cache.cacheNewEntry(buildResolvedEntity(propertyLength, useAscii));
 
               if (i % printInterval == 0) {
