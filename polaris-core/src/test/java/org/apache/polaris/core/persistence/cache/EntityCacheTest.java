@@ -118,8 +118,8 @@ public class EntityCacheTest {
   }
 
   long getHeapSize() {
-//    System.gc();
-//    System.runFinalization();
+    //    System.gc();
+    //    System.runFinalization();
     return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
   }
 
