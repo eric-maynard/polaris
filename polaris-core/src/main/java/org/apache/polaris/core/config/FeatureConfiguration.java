@@ -19,6 +19,7 @@
 package org.apache.polaris.core.config;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.polaris.core.admin.model.StorageConfigInfo;
 
@@ -182,5 +183,14 @@ public class FeatureConfiguration<T> extends PolarisConfiguration<T> {
           .description(
               "How many times to retry refreshing metadata when the previous error was retryable")
           .defaultValue(2)
+          .buildFeatureConfiguration();
+
+  public static final FeatureConfiguration<List<List<Integer>>> NAME_CONFLICT_SIBLING_TYPES =
+      PolarisConfiguration.<List<List<Integer>>>builder()
+          .key("NAME_CONFLICT_SIBLING_TYPES")
+          .description(
+              "A map to associate types that cannot share a name when they do not share a parent. Types do not" +
+                  " need to be mapped to themselves.")
+          .defaultValue(List.of())
           .buildFeatureConfiguration();
 }

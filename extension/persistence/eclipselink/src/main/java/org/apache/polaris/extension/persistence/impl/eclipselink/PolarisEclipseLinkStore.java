@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.apache.polaris.core.PolarisDiagnostics;
+import org.apache.polaris.core.context.CallContext;
 import org.apache.polaris.core.entity.EntityNameLookupRecord;
 import org.apache.polaris.core.entity.PolarisBaseEntity;
 import org.apache.polaris.core.entity.PolarisEntitiesActiveKey;
@@ -35,6 +36,7 @@ import org.apache.polaris.core.entity.PolarisEntityId;
 import org.apache.polaris.core.entity.PolarisEntityType;
 import org.apache.polaris.core.entity.PolarisGrantRecord;
 import org.apache.polaris.core.entity.PolarisPrincipalSecrets;
+import org.apache.polaris.core.persistence.UniqueNameSiblingList;
 import org.apache.polaris.jpa.models.ModelEntity;
 import org.apache.polaris.jpa.models.ModelEntityActive;
 import org.apache.polaris.jpa.models.ModelEntityChangeTracking;
@@ -238,13 +240,17 @@ public class PolarisEclipseLinkStore {
     diagnosticServices.check(session != null, "session_is_null");
     checkInitialized();
 
+    CallContext callContext = CallContext.getCurrentContext();
+    List<Integer> uniqueNameSiblings =
+        UniqueNameSiblingList.get(callContext.getPolarisCallContext(), entityActiveKey.getTypeCode());
+
     return session
         .createQuery(
-            "SELECT m from ModelEntityActive m where m.catalogId=:catalogId and m.parentId=:parentId and m.typeCode=:typeCode and m.name=:name",
+            "SELECT m from ModelEntityActive m where m.catalogId=:catalogId and m.parentId=:parentId and m.typeCode IN (:uniqueNameSiblings) and m.name=:name",
             ModelEntityActive.class)
         .setParameter("catalogId", entityActiveKey.getCatalogId())
         .setParameter("parentId", entityActiveKey.getParentId())
-        .setParameter("typeCode", entityActiveKey.getTypeCode())
+        .setParameter("uniqueNameSiblings", uniqueNameSiblings)
         .setParameter("name", entityActiveKey.getName())
         .getResultStream()
         .findFirst()
