@@ -19,7 +19,6 @@
 package org.apache.polaris.core.config;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.apache.polaris.core.admin.model.StorageConfigInfo;
 
@@ -189,8 +188,8 @@ public class FeatureConfiguration<T> extends PolarisConfiguration<T> {
       PolarisConfiguration.<List<List<Integer>>>builder()
           .key("NAME_CONFLICT_SIBLING_TYPES")
           .description(
-              "A map to associate types that cannot share a name when they do not share a parent. Types do not" +
-                  " need to be mapped to themselves.")
+              "A map to associate types that cannot share a name when they do not share a parent. Types do not"
+                  + " need to be mapped to themselves.")
           .defaultValue(List.of())
           .buildFeatureConfiguration();
 }

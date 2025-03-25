@@ -16,53 +16,52 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.polaris.core.persistence;
-
-import org.apache.polaris.core.PolarisCallContext;
-import org.apache.polaris.core.config.FeatureConfiguration;
-import org.apache.polaris.core.entity.PolarisEntityType;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.polaris.core.PolarisCallContext;
+import org.apache.polaris.core.config.FeatureConfiguration;
+import org.apache.polaris.core.entity.PolarisEntityType;
 
 public class UniqueNameSiblingList {
 
-    /**
-     * Given the type code of an {@link PolarisEntityType}, return the sibling types which the configuration
-     * {@link FeatureConfiguration#NAME_CONFLICT_SIBLING_TYPES} says are "name conflict siblings"
-     *  of the provided type. These entity types cannot share a name when they share a parent.
-     */
-    public static List<Integer> get(
-        PolarisCallContext polarisCallContext, int entityTypeCode) {
-        return get(
-            polarisCallContext,
-            PolarisEntityType.fromCode(entityTypeCode)).stream().map(t -> t.getCode()).collect(Collectors.toList());
-    }
+  /**
+   * Given the type code of an {@link PolarisEntityType}, return the sibling types which the
+   * configuration {@link FeatureConfiguration#NAME_CONFLICT_SIBLING_TYPES} says are "name conflict
+   * siblings" of the provided type. These entity types cannot share a name when they share a
+   * parent.
+   */
+  public static List<Integer> get(PolarisCallContext polarisCallContext, int entityTypeCode) {
+    return get(polarisCallContext, PolarisEntityType.fromCode(entityTypeCode)).stream()
+        .map(t -> t.getCode())
+        .collect(Collectors.toList());
+  }
 
-    /**
-     * Given a {@link PolarisEntityType}, return the sibling types which the configuration
-     * {@link FeatureConfiguration#NAME_CONFLICT_SIBLING_TYPES} says are "name conflict siblings"
-     *  of the provided type. These entity types cannot share a name when they share a parent.
-     */
-    public static List<PolarisEntityType> get(
-        PolarisCallContext polarisCallContext, PolarisEntityType entityType) {
+  /**
+   * Given a {@link PolarisEntityType}, return the sibling types which the configuration {@link
+   * FeatureConfiguration#NAME_CONFLICT_SIBLING_TYPES} says are "name conflict siblings" of the
+   * provided type. These entity types cannot share a name when they share a parent.
+   */
+  public static List<PolarisEntityType> get(
+      PolarisCallContext polarisCallContext, PolarisEntityType entityType) {
 
-        List<List<Integer>> configuredMappings = polarisCallContext
+    List<List<Integer>> configuredMappings =
+        polarisCallContext
             .getConfigurationStore()
             .getConfiguration(polarisCallContext, FeatureConfiguration.NAME_CONFLICT_SIBLING_TYPES);
 
-        Set<Integer> mappedTypeCodes = new HashSet<>();
-        mappedTypeCodes.add(entityType.getCode());
+    Set<Integer> mappedTypeCodes = new HashSet<>();
+    mappedTypeCodes.add(entityType.getCode());
 
-        for (List<Integer> mapping : configuredMappings) {
-            if (mapping.contains(entityType.getCode())) {
-                mappedTypeCodes.addAll(mapping);
-            }
-        }
-
-        return mappedTypeCodes.stream().map(PolarisEntityType::fromCode).collect(Collectors.toList());
+    for (List<Integer> mapping : configuredMappings) {
+      if (mapping.contains(entityType.getCode())) {
+        mappedTypeCodes.addAll(mapping);
+      }
     }
+
+    return mappedTypeCodes.stream().map(PolarisEntityType::fromCode).collect(Collectors.toList());
+  }
 }

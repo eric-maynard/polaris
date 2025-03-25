@@ -242,7 +242,8 @@ public class PolarisEclipseLinkStore {
 
     CallContext callContext = CallContext.getCurrentContext();
     List<Integer> uniqueNameSiblings =
-        UniqueNameSiblingList.get(callContext.getPolarisCallContext(), entityActiveKey.getTypeCode());
+        UniqueNameSiblingList.get(
+            callContext.getPolarisCallContext(), entityActiveKey.getTypeCode());
 
     return session
         .createQuery(
