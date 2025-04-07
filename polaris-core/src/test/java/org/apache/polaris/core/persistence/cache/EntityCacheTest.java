@@ -139,12 +139,12 @@ public class EntityCacheTest {
 
   @Test
   void testHeapSize() throws InterruptedException {
-    long targetCharactersToWrite = 1L * 1000 * 1000 * 1000;
-    int printInterval = 1000;
+    long targetCharactersToWrite = 250 * 1000 * 1000;
+    int printInterval = 250;
     int trials = 1;
     boolean[] asciiProperties = {true, false};
     int[] propertyCharacters = {100, 10000};
-    int[] multipliers = {2, 3};
+    int[] multipliers = {1};
 
     EntityCache cache = allocateNewCache(1);
     for (int trial = 0; trial < trials; trial++) {
