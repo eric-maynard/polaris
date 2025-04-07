@@ -118,8 +118,8 @@ public class EntityCacheTest {
   }
 
   long getHeapSize() {
-    //    System.gc();
-    //    System.runFinalization();
+    System.gc();
+    System.runFinalization();
     return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
   }
 
@@ -142,9 +142,9 @@ public class EntityCacheTest {
     long targetCharactersToWrite = 1L * 1000 * 1000 * 1000;
     int printInterval = 1000;
     int trials = 1;
-    boolean[] asciiProperties = {true};
-    int[] propertyCharacters = {1000};
-    int[] multipliers = {1, 2, 3, 4, 5, 6, 7, 8};
+    boolean[] asciiProperties = {true, false};
+    int[] propertyCharacters = {100, 10000};
+    int[] multipliers = {2, 3};
 
     EntityCache cache = allocateNewCache(1);
     for (int trial = 0; trial < trials; trial++) {
