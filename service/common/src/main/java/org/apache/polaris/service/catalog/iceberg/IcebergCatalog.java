@@ -1201,8 +1201,8 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
 
     /**
      * We override `current` as we aren't able to override `currentMetadata` directly.
-     * `recentlyCommittedMetadata` allows a call to `current()` that directly follows a
-     * call to `commit()` to return the metadata written by commit, skipping `refresh`.
+     * `recentlyCommittedMetadata` allows a call to `current()` that directly follows a call to
+     * `commit()` to return the metadata written by commit, skipping `refresh`.
      */
     @Override
     public TableMetadata current() {
@@ -1232,9 +1232,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
       }
     }
 
-    /**
-     * We override this to clear `recentlyCommittedMetadata`.
-     */
+    /** We override this to clear `recentlyCommittedMetadata`. */
     @Override
     protected void requestRefresh() {
       clearRecentlyCommittedMetadata();
@@ -1242,9 +1240,9 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     }
 
     /**
-     * We override this to set `recentlyCommittedMetadata` after the commit is done.
-     * We also adjust the logic for detecting stale metadata, to allow
-     * `recentlyCommittedMetadata` to be used here if it's returned by `current()`.
+     * We override this to set `recentlyCommittedMetadata` after the commit is done. We also adjust
+     * the logic for detecting stale metadata, to allow `recentlyCommittedMetadata` to be used here
+     * if it's returned by `current()`.
      */
     @Override
     public void commit(TableMetadata base, TableMetadata metadata) {
