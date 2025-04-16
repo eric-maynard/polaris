@@ -46,6 +46,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.iceberg.BaseMetastoreTableOperations;
 import org.apache.iceberg.BaseTable;
 import org.apache.iceberg.CatalogProperties;
+import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.TableMetadata;
@@ -1188,6 +1189,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     private final TableIdentifier tableIdentifier;
     private final String fullTableName;
     private FileIO tableFileIO;
+    private TableMetadata recentlyCommittedMetadata = null;
 
     BasePolarisTableOperations(FileIO defaultFileIO, TableIdentifier tableIdentifier) {
       LOGGER.debug("new BasePolarisTableOperations for {}", tableIdentifier);
@@ -1195,6 +1197,44 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
       this.fullTableName = fullTableName(catalogName, tableIdentifier);
       this.tableFileIO = defaultFileIO;
     }
+
+    /**
+     * We override `current` as we aren't able to override `currentMetadata` directly
+     */
+    @Override
+    public TableMetadata current() {
+      if (recentlyCommittedMetadata != null) {
+        return recentlyCommittedMetadata;
+      } else {
+        return super.current();
+      }
+    }
+
+    /**
+     * We override `commit` to set `recentlyCommittedMetadata` so that calling `current()` after
+     * `commit()` can avoid an extra trip to object storage.
+     * This is copy/paste from `BaseMetastoreTableOperations` except where comments indicate otherwise
+     */
+    @Override
+    public void commit(TableMetadata base, TableMetadata metadata) {
+      if (base != this.current()) {
+        if (base != null) {
+          throw new CommitFailedException("Cannot commit: stale table metadata", new Object[0]);
+        } else {
+          throw new AlreadyExistsException("Table already exists: %s", new Object[]{this.tableName()});
+        }
+      } else if (base == metadata) {
+        LOGGER.info("Nothing to commit.");
+      } else {
+        long start = System.currentTimeMillis();
+        this.doCommit(base, metadata);
+        CatalogUtil.deleteRemovedMetadataFiles(this.io(), base, metadata);
+        this.requestRefresh();
+        this.recentlyCommittedMetadata = metadata; // This is Polaris-exclusive logic
+        LOGGER.info("Successfully committed to table {} in {} ms", this.tableName(), System.currentTimeMillis() - start);
+      }
+    }
+
 
     @Override
     public void doRefresh() {
