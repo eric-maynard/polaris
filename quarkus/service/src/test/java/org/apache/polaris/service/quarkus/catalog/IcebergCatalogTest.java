@@ -133,6 +133,7 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import software.amazon.awssdk.core.exception.NonRetryableException;
 import software.amazon.awssdk.core.exception.RetryableException;
@@ -1797,5 +1798,46 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
 
   private static InMemoryFileIO getInMemoryIo(IcebergCatalog catalog) {
     return (InMemoryFileIO) ((ExceptionMappingFileIO) catalog.getIo()).getInnerIo();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testTableOperationsDoesNotRefreshAfterCommit(boolean shouldCacheMetadata) {
+    if (this.requiresNamespaceCreate()) {
+      catalog.createNamespace(NS);
+    }
+
+    catalog.buildTable(TABLE, SCHEMA).create();
+
+    IcebergCatalog.BasePolarisTableOperations realOps =
+        (IcebergCatalog.BasePolarisTableOperations) catalog.newTableOps(TABLE, shouldCacheMetadata);
+    IcebergCatalog.BasePolarisTableOperations ops = Mockito.spy(realOps);
+
+    TableMetadata base1 = ops.current();
+    TableMetadata base2 = ops.current();
+    Mockito.verify(ops, Mockito.times(1)).doRefresh();
+
+    TableMetadata base3 = ops.refresh();
+    Mockito.verify(ops, Mockito.times(2)).doRefresh();
+
+    Assertions.assertThat(base1.metadataFileLocation()).isEqualTo(base3.metadataFileLocation());
+    Assertions.assertThat(base1).isEqualTo(base2);
+    Assertions.assertThat(base1).isEqualTo(base3);
+
+    Schema newSchema = new Schema(Types.NestedField.optional(100, "new_col", Types.LongType.get()));
+    TableMetadata newMetadata =
+        TableMetadata.buildFrom(base1).setCurrentSchema(newSchema, 100).build();
+    ops.commit(base3, newMetadata);
+    Mockito.verify(ops, Mockito.times(2)).doRefresh();
+
+    ops.current();
+    ops.current();
+    if (shouldCacheMetadata) {
+      Mockito.verify(ops, Mockito.times(2)).doRefresh();
+    } else {
+      Mockito.verify(ops, Mockito.times(3)).doRefresh();
+    }
+
+    catalog.dropTable(TABLE, true);
   }
 }

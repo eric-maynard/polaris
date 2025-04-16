@@ -30,6 +30,7 @@ import jakarta.annotation.Nullable;
 import jakarta.ws.rs.core.SecurityContext;
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -350,9 +351,20 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     return new PolarisIcebergCatalogViewBuilder(identifier);
   }
 
+  @VisibleForTesting
+  public TableOperations newTableOps(TableIdentifier tableIdentifier, boolean shouldCacheMetadata) {
+    return new BasePolarisTableOperations(catalogFileIO, tableIdentifier, shouldCacheMetadata);
+  }
+
   @Override
   protected TableOperations newTableOps(TableIdentifier tableIdentifier) {
-    return new BasePolarisTableOperations(catalogFileIO, tableIdentifier);
+    boolean shouldCacheMetadata =
+        getCurrentPolarisContext()
+            .getConfigurationStore()
+            .getConfiguration(
+                getCurrentPolarisContext(),
+                BehaviorChangeConfiguration.TABLE_OPERATIONS_CACHE_METADATA);
+    return newTableOps(tableIdentifier, shouldCacheMetadata);
   }
 
   @Override
@@ -1185,18 +1197,21 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     }
   }
 
-  private class BasePolarisTableOperations extends BaseMetastoreTableOperations {
+  public class BasePolarisTableOperations extends BaseMetastoreTableOperations {
     private final TableIdentifier tableIdentifier;
     private final String fullTableName;
     private FileIO tableFileIO;
+    private boolean shouldCacheMetadata;
     private final Object recentlyCommittedMetadataLock = new Object();
     private TableMetadata recentlyCommittedMetadata = null;
 
-    BasePolarisTableOperations(FileIO defaultFileIO, TableIdentifier tableIdentifier) {
+    public BasePolarisTableOperations(
+        FileIO defaultFileIO, TableIdentifier tableIdentifier, boolean shouldCacheMetadata) {
       LOGGER.debug("new BasePolarisTableOperations for {}", tableIdentifier);
       this.tableIdentifier = tableIdentifier;
       this.fullTableName = fullTableName(catalogName, tableIdentifier);
       this.tableFileIO = defaultFileIO;
+      this.shouldCacheMetadata = shouldCacheMetadata;
     }
 
     /**
@@ -1221,7 +1236,9 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
       synchronized (recentlyCommittedMetadataLock) {
         if (recentlyCommittedMetadata != null
             && recentlyCommittedMetadata.metadataFileLocation() != null) {
-          this.recentlyCommittedMetadata = recentlyCommittedMetadata;
+          if (shouldCacheMetadata) {
+            this.recentlyCommittedMetadata = recentlyCommittedMetadata;
+          }
         }
       }
     }
@@ -1282,6 +1299,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
       }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void doRefresh() {
       LOGGER.debug("doRefresh for tableIdentifier {}", tableIdentifier);
@@ -1330,8 +1348,9 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
       }
     }
 
+    /** {@inheritDoc} */
     @Override
-    public void doCommit(TableMetadata base, TableMetadata metadata) {
+    protected void doCommit(TableMetadata base, TableMetadata metadata) {
       LOGGER.debug(
           "doCommit for table {} with base {}, metadata {}", tableIdentifier, base, metadata);
       // TODO: Maybe avoid writing metadata if there's definitely a transaction conflict
@@ -1413,6 +1432,18 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
 
       String newLocation = writeNewMetadataIfRequired(base == null, metadata);
       String oldLocation = base == null ? null : base.metadataFileLocation();
+
+      // TODO: we should not need to do this hack, but there's no other way to modify
+      // metadataFileLocation
+      try {
+        Field field = TableMetadata.class.getDeclaredField("metadataFileLocation");
+        field.setAccessible(true);
+        field.set(metadata, newLocation);
+      } catch (IllegalAccessException | NoSuchFieldException e) {
+        LOGGER.error(
+            "Encountered an unexpected error while attempting to modify TableMetadata.metadataFileLocation",
+            e);
+      }
 
       // TODO: Consider using the entity from doRefresh() directly to do the conflict detection
       // instead of a two-layer CAS (checking metadataLocation to detect concurrent modification
