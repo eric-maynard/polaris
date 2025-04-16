@@ -1189,6 +1189,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     private final TableIdentifier tableIdentifier;
     private final String fullTableName;
     private FileIO tableFileIO;
+    private final Object recentlyCommittedMetadataLock = new Object();
     private TableMetadata recentlyCommittedMetadata = null;
 
     BasePolarisTableOperations(FileIO defaultFileIO, TableIdentifier tableIdentifier) {
@@ -1199,42 +1200,80 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     }
 
     /**
-     * We override `current` as we aren't able to override `currentMetadata` directly
+     * We override `current` as we aren't able to override `currentMetadata` directly.
+     * `recentlyCommittedMetadata` is a one-time shortcut that allows a call to `current()` that
+     * directly follows a call to `commit()` to return the metadata written by commit.
      */
     @Override
     public TableMetadata current() {
-      if (recentlyCommittedMetadata != null) {
-        return recentlyCommittedMetadata;
-      } else {
-        return super.current();
+      synchronized (recentlyCommittedMetadataLock) {
+        if (recentlyCommittedMetadata != null) {
+          TableMetadata tmp = recentlyCommittedMetadata;
+          clearRecentlyCommittedMetadata();
+          return tmp;
+        } else {
+          return super.current();
+        }
       }
+    }
+
+    private void setRecentlyCommittedMetadata(TableMetadata recentlyCommittedMetadata) {
+      synchronized (recentlyCommittedMetadataLock) {
+        this.recentlyCommittedMetadata = recentlyCommittedMetadata;
+      }
+    }
+
+    private void clearRecentlyCommittedMetadata() {
+      synchronized (recentlyCommittedMetadataLock) {
+        recentlyCommittedMetadata = null;
+      }
+    }
+
+    @Override
+    protected void requestRefresh() {
+      clearRecentlyCommittedMetadata();
+      super.requestRefresh();
     }
 
     /**
      * We override `commit` to set `recentlyCommittedMetadata` so that calling `current()` after
-     * `commit()` can avoid an extra trip to object storage.
-     * This is copy/paste from `BaseMetastoreTableOperations` except where comments indicate otherwise
+     * `commit()` can avoid an extra trip to object storage. We also remove the check that base ==
+     * current(), as that would fail when we use the `recentlyCommittedMetadata`.
      */
     @Override
     public void commit(TableMetadata base, TableMetadata metadata) {
-      if (base != this.current()) {
-        if (base != null) {
-          throw new CommitFailedException("Cannot commit: stale table metadata", new Object[0]);
-        } else {
-          throw new AlreadyExistsException("Table already exists: %s", new Object[]{this.tableName()});
-        }
-      } else if (base == metadata) {
-        LOGGER.info("Nothing to commit.");
-      } else {
-        long start = System.currentTimeMillis();
-        this.doCommit(base, metadata);
-        CatalogUtil.deleteRemovedMetadataFiles(this.io(), base, metadata);
-        this.requestRefresh();
-        this.recentlyCommittedMetadata = metadata; // This is Polaris-exclusive logic
-        LOGGER.info("Successfully committed to table {} in {} ms", this.tableName(), System.currentTimeMillis() - start);
-      }
-    }
+      TableMetadata currentMetadata = current();
 
+      // if the metadata is already out of date, reject it
+      if (base == null) {
+        if (currentMetadata != null) {
+          // when current is non-null, the table exists. but when base is null, the commit is trying
+          // to create the table
+          throw new AlreadyExistsException("Table already exists: %s", tableName());
+        }
+      } else if (base.metadataFileLocation() != null
+          && !base.metadataFileLocation().equals(currentMetadata.metadataFileLocation())) {
+        throw new CommitFailedException("Cannot commit: stale table metadata");
+      } else if (base != currentMetadata) {
+        // This branch is different from BaseMetastoreTableOperations
+        LOGGER.debug(
+            "Base object differs from current metadata; proceeding because locations match");
+      } else if (base.metadataFileLocation().equals(metadata.metadataFileLocation())) {
+        // if the metadata is not changed, return early
+        LOGGER.info("Nothing to commit.");
+        return;
+      }
+
+      long start = System.currentTimeMillis();
+      this.doCommit(base, metadata);
+      CatalogUtil.deleteRemovedMetadataFiles(this.io(), base, metadata);
+      this.requestRefresh();
+      this.recentlyCommittedMetadata = metadata;
+      LOGGER.info(
+          "Successfully committed to table {} in {} ms",
+          this.tableName(),
+          System.currentTimeMillis() - start);
+    }
 
     @Override
     public void doRefresh() {
