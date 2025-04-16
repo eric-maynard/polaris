@@ -1209,7 +1209,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
       synchronized (recentlyCommittedMetadataLock) {
         if (recentlyCommittedMetadata != null) {
           TableMetadata tmp = recentlyCommittedMetadata;
-          clearRecentlyCommittedMetadata();
+          LOGGER.debug("Skipped a refresh by re-using recently committed metadata");
           return tmp;
         } else {
           return super.current();
@@ -1219,7 +1219,10 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
 
     private void setRecentlyCommittedMetadata(TableMetadata recentlyCommittedMetadata) {
       synchronized (recentlyCommittedMetadataLock) {
-        this.recentlyCommittedMetadata = recentlyCommittedMetadata;
+        if (recentlyCommittedMetadata != null
+            && recentlyCommittedMetadata.metadataFileLocation() != null) {
+          this.recentlyCommittedMetadata = recentlyCommittedMetadata;
+        }
       }
     }
 
@@ -1242,37 +1245,40 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
      */
     @Override
     public void commit(TableMetadata base, TableMetadata metadata) {
-      TableMetadata currentMetadata = current();
+      synchronized (recentlyCommittedMetadataLock) {
+        TableMetadata currentMetadata = current();
 
-      // if the metadata is already out of date, reject it
-      if (base == null) {
-        if (currentMetadata != null) {
-          // when current is non-null, the table exists. but when base is null, the commit is trying
-          // to create the table
-          throw new AlreadyExistsException("Table already exists: %s", tableName());
+        // if the metadata is already out of date, reject it
+        if (base == null) {
+          if (currentMetadata != null) {
+            // when current is non-null, the table exists. but when base is null, the commit is
+            // trying
+            // to create the table
+            throw new AlreadyExistsException("Table already exists: %s", tableName());
+          }
+        } else if (base.metadataFileLocation() != null
+            && !base.metadataFileLocation().equals(currentMetadata.metadataFileLocation())) {
+          throw new CommitFailedException("Cannot commit: stale table metadata");
+        } else if (base != currentMetadata) {
+          // This branch is different from BaseMetastoreTableOperations
+          LOGGER.debug(
+              "Base object differs from current metadata; proceeding because metadata locations match");
+        } else if (base.metadataFileLocation().equals(metadata.metadataFileLocation())) {
+          // if the metadata is not changed, return early
+          LOGGER.info("Nothing to commit.");
+          return;
         }
-      } else if (base.metadataFileLocation() != null
-          && !base.metadataFileLocation().equals(currentMetadata.metadataFileLocation())) {
-        throw new CommitFailedException("Cannot commit: stale table metadata");
-      } else if (base != currentMetadata) {
-        // This branch is different from BaseMetastoreTableOperations
-        LOGGER.debug(
-            "Base object differs from current metadata; proceeding because locations match");
-      } else if (base.metadataFileLocation().equals(metadata.metadataFileLocation())) {
-        // if the metadata is not changed, return early
-        LOGGER.info("Nothing to commit.");
-        return;
-      }
 
-      long start = System.currentTimeMillis();
-      this.doCommit(base, metadata);
-      CatalogUtil.deleteRemovedMetadataFiles(this.io(), base, metadata);
-      this.requestRefresh();
-      this.recentlyCommittedMetadata = metadata;
-      LOGGER.info(
-          "Successfully committed to table {} in {} ms",
-          this.tableName(),
-          System.currentTimeMillis() - start);
+        long start = System.currentTimeMillis();
+        this.doCommit(base, metadata);
+        CatalogUtil.deleteRemovedMetadataFiles(this.io(), base, metadata);
+        this.requestRefresh();
+        setRecentlyCommittedMetadata(metadata);
+        LOGGER.info(
+            "Successfully committed to table {} in {} ms",
+            this.tableName(),
+            System.currentTimeMillis() - start);
+      }
     }
 
     @Override
