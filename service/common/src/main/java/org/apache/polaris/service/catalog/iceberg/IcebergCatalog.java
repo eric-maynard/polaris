@@ -1232,12 +1232,15 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
       }
     }
 
-    private void setRecentlyCommittedMetadata(TableMetadata recentlyCommittedMetadata) {
+    private void setRecentlyCommittedMetadata(
+        TableMetadata recentlyCommittedMetadata, String metadataLocation) {
       synchronized (recentlyCommittedMetadataLock) {
         if (recentlyCommittedMetadata != null
             && recentlyCommittedMetadata.metadataFileLocation() != null) {
           if (shouldCacheMetadata) {
-            this.recentlyCommittedMetadata = recentlyCommittedMetadata;
+            this.recentlyCommittedMetadata =
+                TableMetadata.buildFrom(recentlyCommittedMetadata).withMetadataLocation(metadataLocation).build();
+          ;
           }
         }
       }
@@ -1291,7 +1294,6 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
         this.doCommit(base, metadata);
         CatalogUtil.deleteRemovedMetadataFiles(this.io(), base, metadata);
         this.requestRefresh();
-        setRecentlyCommittedMetadata(metadata);
         LOGGER.info(
             "Successfully committed to table {} in {} ms",
             this.tableName(),
@@ -1432,6 +1434,8 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
 
       String newLocation = writeNewMetadataIfRequired(base == null, metadata);
       String oldLocation = base == null ? null : base.metadataFileLocation();
+
+      setRecentlyCommittedMetadata(metadata, newLocation);
 
       // TODO: we should not need to do this hack, but there's no other way to modify
       // metadataFileLocation
