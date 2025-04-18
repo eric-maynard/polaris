@@ -1239,8 +1239,10 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
             && recentlyCommittedMetadata.metadataFileLocation() != null) {
           if (shouldCacheMetadata) {
             this.recentlyCommittedMetadata =
-                TableMetadata.buildFrom(recentlyCommittedMetadata).withMetadataLocation(metadataLocation).build();
-          ;
+                TableMetadata.buildFrom(recentlyCommittedMetadata)
+                    .withMetadataLocation(metadataLocation)
+                    .build();
+            ;
           }
         }
       }

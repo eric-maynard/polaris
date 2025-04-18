@@ -1816,7 +1816,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
     IcebergCatalog.BasePolarisTableOperations ops = Mockito.spy(realOps);
 
     try (MockedStatic<TableMetadataParser> mocked =
-             Mockito.mockStatic(TableMetadataParser.class, Mockito.CALLS_REAL_METHODS)) {
+        Mockito.mockStatic(TableMetadataParser.class, Mockito.CALLS_REAL_METHODS)) {
       TableMetadata base1 = ops.current();
       mocked.verify(
           () -> TableMetadataParser.read(Mockito.any(), Mockito.anyString()), Mockito.times(1));
