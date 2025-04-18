@@ -1235,8 +1235,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     private void setRecentlyCommittedMetadata(
         TableMetadata recentlyCommittedMetadata, String metadataLocation) {
       synchronized (recentlyCommittedMetadataLock) {
-        if (recentlyCommittedMetadata != null
-            && recentlyCommittedMetadata.metadataFileLocation() != null) {
+        if (recentlyCommittedMetadata != null && metadataLocation != null) {
           if (shouldCacheMetadata) {
             this.recentlyCommittedMetadata =
                 TableMetadata.buildFrom(recentlyCommittedMetadata)
