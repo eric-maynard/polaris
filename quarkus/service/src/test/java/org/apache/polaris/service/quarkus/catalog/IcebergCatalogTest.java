@@ -134,6 +134,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import software.amazon.awssdk.core.exception.NonRetryableException;
 import software.amazon.awssdk.core.exception.RetryableException;
@@ -1801,8 +1802,8 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  public void testTableOperationsDoesNotRefreshAfterCommit(boolean shouldCacheMetadata) {
+  @ValueSource(booleans = {false, true})
+  public void testTableOperationsDoesNotRefreshAfterCommit(boolean updateMetadataOnCommit) {
     if (this.requiresNamespaceCreate()) {
       catalog.createNamespace(NS);
     }
@@ -1810,34 +1811,45 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
     catalog.buildTable(TABLE, SCHEMA).create();
 
     IcebergCatalog.BasePolarisTableOperations realOps =
-        (IcebergCatalog.BasePolarisTableOperations) catalog.newTableOps(TABLE, shouldCacheMetadata);
+        (IcebergCatalog.BasePolarisTableOperations)
+            catalog.newTableOps(TABLE, updateMetadataOnCommit);
     IcebergCatalog.BasePolarisTableOperations ops = Mockito.spy(realOps);
 
-    TableMetadata base1 = ops.current();
-    TableMetadata base2 = ops.current();
-    Mockito.verify(ops, Mockito.times(1)).doRefresh();
+    try (MockedStatic<TableMetadataParser> mocked =
+             Mockito.mockStatic(TableMetadataParser.class, Mockito.CALLS_REAL_METHODS)) {
+      TableMetadata base1 = ops.current();
+      mocked.verify(
+          () -> TableMetadataParser.read(Mockito.any(), Mockito.anyString()), Mockito.times(1));
 
-    TableMetadata base3 = ops.refresh();
-    Mockito.verify(ops, Mockito.times(2)).doRefresh();
+      TableMetadata base2 = ops.refresh();
+      mocked.verify(
+          () -> TableMetadataParser.read(Mockito.any(), Mockito.anyString()), Mockito.times(1));
 
-    Assertions.assertThat(base1.metadataFileLocation()).isEqualTo(base3.metadataFileLocation());
-    Assertions.assertThat(base1).isEqualTo(base2);
-    Assertions.assertThat(base1).isEqualTo(base3);
+      Assertions.assertThat(base1.metadataFileLocation()).isEqualTo(base2.metadataFileLocation());
+      Assertions.assertThat(base1).isEqualTo(base2);
 
-    Schema newSchema = new Schema(Types.NestedField.optional(100, "new_col", Types.LongType.get()));
-    TableMetadata newMetadata =
-        TableMetadata.buildFrom(base1).setCurrentSchema(newSchema, 100).build();
-    ops.commit(base3, newMetadata);
-    Mockito.verify(ops, Mockito.times(2)).doRefresh();
+      Schema newSchema =
+          new Schema(Types.NestedField.optional(100, "new_col", Types.LongType.get()));
+      TableMetadata newMetadata =
+          TableMetadata.buildFrom(base1).setCurrentSchema(newSchema, 100).build();
+      ops.commit(base2, newMetadata);
+      mocked.verify(
+          () -> TableMetadataParser.read(Mockito.any(), Mockito.anyString()), Mockito.times(1));
 
-    ops.current();
-    ops.current();
-    if (shouldCacheMetadata) {
-      Mockito.verify(ops, Mockito.times(2)).doRefresh();
-    } else {
-      Mockito.verify(ops, Mockito.times(3)).doRefresh();
+      ops.current();
+      int expectedReads = 2;
+      if (updateMetadataOnCommit) {
+        expectedReads = 1;
+      }
+      mocked.verify(
+          () -> TableMetadataParser.read(Mockito.any(), Mockito.anyString()),
+          Mockito.times(expectedReads));
+      ops.refresh();
+      mocked.verify(
+          () -> TableMetadataParser.read(Mockito.any(), Mockito.anyString()),
+          Mockito.times(expectedReads));
+    } finally {
+      catalog.dropTable(TABLE, true);
     }
-
-    catalog.dropTable(TABLE, true);
   }
 }
