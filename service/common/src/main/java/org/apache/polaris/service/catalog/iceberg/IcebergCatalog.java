@@ -1892,7 +1892,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
         String newLocation,
         Predicate<Exception> shouldRetry,
         int numRetries,
-        Function<String, T> metadataLoader) {
+        Function<String, T> metadataLoader) { 
       // use null-safe equality check because new tables have a null metadata location
       if (!Objects.equal(currentMetadataLocation, newLocation)) {
         LOGGER.info("Refreshing table metadata from new version: {}", newLocation);
