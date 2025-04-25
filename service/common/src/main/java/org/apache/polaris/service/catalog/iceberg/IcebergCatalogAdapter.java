@@ -73,6 +73,7 @@ import org.apache.polaris.service.catalog.api.IcebergRestCatalogApiService;
 import org.apache.polaris.service.catalog.api.IcebergRestConfigurationApiService;
 import org.apache.polaris.service.catalog.common.CatalogAdapter;
 import org.apache.polaris.service.context.CallContextCatalogFactory;
+import org.apache.polaris.service.conversion.TableConverterRegistry;
 import org.apache.polaris.service.http.IcebergHttpUtil;
 import org.apache.polaris.service.http.IfNoneMatch;
 import org.apache.polaris.service.types.CommitTableRequest;
@@ -136,6 +137,7 @@ public class IcebergCatalogAdapter
   private final UserSecretsManager userSecretsManager;
   private final PolarisAuthorizer polarisAuthorizer;
   private final CatalogPrefixParser prefixParser;
+  private final TableConverterRegistry tableConverterRegistry;
 
   @Inject
   public IcebergCatalogAdapter(
@@ -146,7 +148,8 @@ public class IcebergCatalogAdapter
       PolarisMetaStoreManager metaStoreManager,
       UserSecretsManager userSecretsManager,
       PolarisAuthorizer polarisAuthorizer,
-      CatalogPrefixParser prefixParser) {
+      CatalogPrefixParser prefixParser,
+      TableConverterRegistry tableConverterRegistry) {
     this.realmContext = realmContext;
     this.callContext = callContext;
     this.catalogFactory = catalogFactory;
@@ -155,6 +158,7 @@ public class IcebergCatalogAdapter
     this.userSecretsManager = userSecretsManager;
     this.polarisAuthorizer = polarisAuthorizer;
     this.prefixParser = prefixParser;
+    this.tableConverterRegistry = tableConverterRegistry;
 
     // FIXME: This is a hack to set the current context for downstream calls.
     CallContext.setCurrentContext(callContext);
@@ -187,7 +191,6 @@ public class IcebergCatalogAdapter
     if (authenticatedPrincipal == null) {
       throw new NotAuthorizedException("Failed to find authenticatedPrincipal in SecurityContext");
     }
-
     return new IcebergCatalogHandler(
         callContext,
         entityManager,
@@ -196,7 +199,8 @@ public class IcebergCatalogAdapter
         securityContext,
         catalogFactory,
         catalogName,
-        polarisAuthorizer);
+        polarisAuthorizer,
+        tableConverterRegistry);
   }
 
   @Override
