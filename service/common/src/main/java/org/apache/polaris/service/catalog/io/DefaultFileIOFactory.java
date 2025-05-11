@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.hadoop.HadoopFileIO;
 import org.apache.iceberg.io.FileIO;
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.context.CallContext;
@@ -116,7 +117,12 @@ public class DefaultFileIOFactory implements FileIOFactory {
   @VisibleForTesting
   FileIO loadFileIOInternal(
       @Nonnull String ioImplClassName, @Nonnull Map<String, String> properties) {
-    return new ExceptionMappingFileIO(
-        CatalogUtil.loadFileIO(ioImplClassName, properties, new Configuration()));
+    FileIO innerFileIO = CatalogUtil.loadFileIO(ioImplClassName, properties, new Configuration());
+    if (innerFileIO instanceof HadoopFileIO) {
+      if (false) {
+        throw new IllegalStateException("Hadoop FileIO implementation disabled by the service");
+      }
+    }
+    return new ExceptionMappingFileIO(innerFileIO);
   }
 }
