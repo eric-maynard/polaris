@@ -71,10 +71,12 @@ public class BehaviorChangeConfiguration<T> extends PolarisConfiguration<T> {
               .defaultValue(true)
               .buildBehaviorChangeConfiguration();
 
-  public static final BehaviorChangeConfiguration<Boolean> DEFAULT_FILE_IO_FACTORY_DISABLE_HADOOP_FILE_IO =
-      PolarisConfiguration.<Boolean>builder()
-          .key("DEFAULT_FILE_IO_FACTORY_DISABLE_HADOOP_FILE_IO")
-          .description("Whether or not to disable the use of HadoopFileIO inside the default FileIOFactory")
-          .defaultValue(true)
-          .buildBehaviorChangeConfiguration();
+  public static final BehaviorChangeConfiguration<Boolean>
+      DEFAULT_FILE_IO_FACTORY_DISABLE_HADOOP_FILE_IO =
+          PolarisConfiguration.<Boolean>builder()
+              .key("DEFAULT_FILE_IO_FACTORY_DISABLE_HADOOP_FILE_IO")
+              .description(
+                  "Whether or not to disable the use of HadoopFileIO inside the default FileIOFactory")
+              .defaultValue(false)
+              .buildBehaviorChangeConfiguration();
 }

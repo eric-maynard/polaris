@@ -124,9 +124,10 @@ public class DefaultFileIOFactory implements FileIOFactory {
       @Nonnull Set<String> tableLocations) {
     FileIO innerFileIO = CatalogUtil.loadFileIO(ioImplClassName, properties, new Configuration());
 
-    boolean prohibitHadoopFileIO = configurationStore.getConfiguration(
-        callContext.getPolarisCallContext(),
-        BehaviorChangeConfiguration.DEFAULT_FILE_IO_FACTORY_DISABLE_HADOOP_FILE_IO);
+    boolean prohibitHadoopFileIO =
+        configurationStore.getConfiguration(
+            callContext.getPolarisCallContext(),
+            BehaviorChangeConfiguration.DEFAULT_FILE_IO_FACTORY_DISABLE_HADOOP_FILE_IO);
 
     if (prohibitHadoopFileIO) {
       boolean isHadoopFileIO = innerFileIO instanceof HadoopFileIO;

@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.aws.s3.S3FileIOProperties;
 import org.apache.iceberg.catalog.Namespace;
@@ -120,7 +119,8 @@ public class FileIOFactoryTest {
                         .containsEntry(S3FileIOProperties.ACCESS_KEY_ID, TEST_ACCESS_KEY)
                         .containsEntry(S3FileIOProperties.SECRET_ACCESS_KEY, SECRET_ACCESS_KEY)
                         .containsEntry(S3FileIOProperties.SESSION_TOKEN, SESSION_TOKEN);
-                    return super.loadFileIOInternal(ioImplClassName, properties, callContext, tableLocations);
+                    return super.loadFileIOInternal(
+                        ioImplClassName, properties, callContext, tableLocations);
                   }
                 });
 
