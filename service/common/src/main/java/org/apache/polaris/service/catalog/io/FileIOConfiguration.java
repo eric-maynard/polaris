@@ -32,9 +32,7 @@ public interface FileIOConfiguration {
 
   /** Configurations for the DefaultFileIOFactory */
   default DefaultFileIOConfig defaultConfig() {
-    return new DefaultFileIOConfig() {
-
-    };
+    return new DefaultFileIOConfig() {};
   }
 
   interface DefaultFileIOConfig {
