@@ -16,10 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.polaris.service.quarkus.catalog.io;
+package org.apache.polaris.service.catalog.io;
 
-import io.smallrye.config.ConfigMapping;
-import org.apache.polaris.service.catalog.io.FileIOConfiguration;
+import java.util.Optional;
 
-@ConfigMapping(prefix = "polaris.file-io")
-public interface QuarkusFileIOConfiguration extends FileIOConfiguration {}
+public interface FileIOConfiguration {
+
+  /**
+   * The type of the catalog IO to use. Must be a registered {@link
+   * org.apache.polaris.service.catalog.io.FileIOFactory} identifier.
+   */
+  String type();
+
+  /** Configurations for the DefaultFileIOFactory */
+  DefaultFileIOConfig defaultConfig();
+
+  interface DefaultFileIOConfig {
+    /** Whether to disable the use of HadoopFileIO inside the default FileIOFactory */
+    Optional<Boolean> allowHadoopFileIO();
+  }
+}

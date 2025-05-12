@@ -44,10 +44,14 @@ public class WasbTranslatingFileIOFactory implements FileIOFactory {
   public WasbTranslatingFileIOFactory(
       RealmEntityManagerFactory realmEntityManagerFactory,
       MetaStoreManagerFactory metaStoreManagerFactory,
-      PolarisConfigurationStore configurationStore) {
+      PolarisConfigurationStore configurationStore,
+      FileIOConfiguration fileIOConfiguration) {
     defaultFileIOFactory =
         new DefaultFileIOFactory(
-            realmEntityManagerFactory, metaStoreManagerFactory, configurationStore);
+            realmEntityManagerFactory,
+            metaStoreManagerFactory,
+            configurationStore,
+            fileIOConfiguration);
   }
 
   @Override

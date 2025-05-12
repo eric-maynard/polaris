@@ -30,7 +30,9 @@ import java.util.Set;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.hadoop.HadoopFileIO;
 import org.apache.iceberg.io.FileIO;
+import org.apache.iceberg.io.ResolvingFileIO;
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.context.CallContext;
 import org.apache.polaris.core.context.RealmContext;
@@ -58,15 +60,18 @@ public class DefaultFileIOFactory implements FileIOFactory {
   private final RealmEntityManagerFactory realmEntityManagerFactory;
   private final MetaStoreManagerFactory metaStoreManagerFactory;
   private final PolarisConfigurationStore configurationStore;
+  private final FileIOConfiguration fileIOConfiguration;
 
   @Inject
   public DefaultFileIOFactory(
       RealmEntityManagerFactory realmEntityManagerFactory,
       MetaStoreManagerFactory metaStoreManagerFactory,
-      PolarisConfigurationStore configurationStore) {
+      PolarisConfigurationStore configurationStore,
+      FileIOConfiguration fileIOConfiguration) {
     this.realmEntityManagerFactory = realmEntityManagerFactory;
     this.metaStoreManagerFactory = metaStoreManagerFactory;
     this.configurationStore = configurationStore;
+    this.fileIOConfiguration = fileIOConfiguration;
   }
 
   @Override
@@ -110,13 +115,37 @@ public class DefaultFileIOFactory implements FileIOFactory {
       properties.putAll(accessConfig.get().extraProperties());
     }
 
-    return loadFileIOInternal(ioImplClassName, properties);
+    return loadFileIOInternal(ioImplClassName, properties, callContext, tableLocations);
   }
 
   @VisibleForTesting
   FileIO loadFileIOInternal(
-      @Nonnull String ioImplClassName, @Nonnull Map<String, String> properties) {
-    return new ExceptionMappingFileIO(
-        CatalogUtil.loadFileIO(ioImplClassName, properties, new Configuration()));
+      @Nonnull String ioImplClassName,
+      @Nonnull Map<String, String> properties,
+      @Nonnull CallContext callContext,
+      @Nonnull Set<String> tableLocations) {
+    FileIO innerFileIO = CatalogUtil.loadFileIO(ioImplClassName, properties, new Configuration());
+
+    boolean prohibitHadoopFileIO =
+        Optional.ofNullable(fileIOConfiguration.defaultConfig())
+            .map(FileIOConfiguration.DefaultFileIOConfig::allowHadoopFileIO)
+            .flatMap(c -> c)
+            .orElse(false);
+
+    if (prohibitHadoopFileIO) {
+      boolean isHadoopFileIO = innerFileIO instanceof HadoopFileIO;
+      if (innerFileIO instanceof ResolvingFileIO resolvingFileIO) {
+        for (String tableLocation : tableLocations) {
+          if (resolvingFileIO.ioClass(tableLocation) == HadoopFileIO.class) {
+            isHadoopFileIO = true;
+          }
+        }
+      }
+
+      if (isHadoopFileIO) {
+        throw new IllegalStateException("Hadoop FileIO is disabled by the service");
+      }
+    }
+    return new ExceptionMappingFileIO(innerFileIO);
   }
 }

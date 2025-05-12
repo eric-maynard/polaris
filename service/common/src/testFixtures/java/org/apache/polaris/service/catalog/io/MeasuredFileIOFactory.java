@@ -56,10 +56,14 @@ public class MeasuredFileIOFactory implements FileIOFactory {
   public MeasuredFileIOFactory(
       RealmEntityManagerFactory realmEntityManagerFactory,
       MetaStoreManagerFactory metaStoreManagerFactory,
-      PolarisConfigurationStore configurationStore) {
+      PolarisConfigurationStore configurationStore,
+      FileIOConfiguration fileIOConfiguration) {
     defaultFileIOFactory =
         new DefaultFileIOFactory(
-            realmEntityManagerFactory, metaStoreManagerFactory, configurationStore);
+            realmEntityManagerFactory,
+            metaStoreManagerFactory,
+            configurationStore,
+            fileIOConfiguration);
   }
 
   @Override
