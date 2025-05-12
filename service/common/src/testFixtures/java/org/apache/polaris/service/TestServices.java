@@ -50,8 +50,8 @@ import org.apache.polaris.service.catalog.DefaultCatalogPrefixParser;
 import org.apache.polaris.service.catalog.api.IcebergRestCatalogApi;
 import org.apache.polaris.service.catalog.api.IcebergRestConfigurationApi;
 import org.apache.polaris.service.catalog.iceberg.IcebergCatalogAdapter;
+import org.apache.polaris.service.catalog.io.FileIOConfiguration;
 import org.apache.polaris.service.catalog.io.FileIOFactory;
-import org.apache.polaris.service.catalog.io.MeasuredFileIOFactory;
 import org.apache.polaris.service.config.DefaultConfigurationStore;
 import org.apache.polaris.service.config.RealmEntityManagerFactory;
 import org.apache.polaris.service.config.ReservedProperties;
@@ -63,7 +63,6 @@ import org.apache.polaris.service.persistence.InMemoryPolarisMetaStoreManagerFac
 import org.apache.polaris.service.secrets.UnsafeInMemorySecretsManagerFactory;
 import org.apache.polaris.service.storage.PolarisStorageIntegrationProviderImpl;
 import org.apache.polaris.service.task.TaskExecutor;
-import org.assertj.core.util.TriFunction;
 import org.mockito.Mockito;
 import software.amazon.awssdk.services.sts.StsClient;
 
@@ -84,13 +83,13 @@ public record TestServices(
   private static final RealmContext TEST_REALM = () -> "test-realm";
   private static final String GCP_ACCESS_TOKEN = "abc";
 
-  @FunctionalInterface
-  public interface FileIOFactorySupplier
-      extends TriFunction<
-          RealmEntityManagerFactory,
-          MetaStoreManagerFactory,
-          PolarisConfigurationStore,
-          FileIOFactory> {}
+  public interface FileIOFactorySupplier {
+    FileIOFactory apply(
+        RealmEntityManagerFactory realmEntityManagerFactory,
+        MetaStoreManagerFactory metaStoreManagerFactory,
+        PolarisConfigurationStore configurationStore,
+        FileIOConfiguration fileIOConfiguration);
+  }
 
   public static Builder builder() {
     return new Builder();
@@ -100,7 +99,7 @@ public record TestServices(
     private RealmContext realmContext = TEST_REALM;
     private Map<String, Object> config = Map.of();
     private StsClient stsClient = Mockito.mock(StsClient.class);
-    private FileIOFactorySupplier fileIOFactorySupplier = MeasuredFileIOFactory::new;
+    private FileIOFactorySupplier fileIOFactorySupplier;
 
     private Builder() {}
 
@@ -128,6 +127,7 @@ public record TestServices(
       DefaultConfigurationStore configurationStore = new DefaultConfigurationStore(config);
       PolarisDiagnostics polarisDiagnostics = Mockito.mock(PolarisDiagnostics.class);
       PolarisAuthorizer authorizer = Mockito.mock(PolarisAuthorizer.class);
+      FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
 
       // Application level
       PolarisStorageIntegrationProviderImpl storageIntegrationProvider =
@@ -175,7 +175,10 @@ public record TestServices(
 
       FileIOFactory fileIOFactory =
           fileIOFactorySupplier.apply(
-              realmEntityManagerFactory, metaStoreManagerFactory, configurationStore);
+              realmEntityManagerFactory,
+              metaStoreManagerFactory,
+              configurationStore,
+              fileIOConfiguration);
 
       TaskExecutor taskExecutor = Mockito.mock(TaskExecutor.class);
 

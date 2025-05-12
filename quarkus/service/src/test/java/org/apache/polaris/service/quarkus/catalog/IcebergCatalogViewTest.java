@@ -66,6 +66,7 @@ import org.apache.polaris.service.admin.PolarisAdminService;
 import org.apache.polaris.service.catalog.PolarisPassthroughResolutionView;
 import org.apache.polaris.service.catalog.iceberg.IcebergCatalog;
 import org.apache.polaris.service.catalog.io.DefaultFileIOFactory;
+import org.apache.polaris.service.catalog.io.FileIOConfiguration;
 import org.apache.polaris.service.catalog.io.FileIOFactory;
 import org.apache.polaris.service.config.RealmEntityManagerFactory;
 import org.apache.polaris.service.config.ReservedProperties;
@@ -229,9 +230,10 @@ public class IcebergCatalogViewTest extends ViewCatalogTests<IcebergCatalog> {
     PolarisPassthroughResolutionView passthroughView =
         new PolarisPassthroughResolutionView(
             callContext, entityManager, securityContext, CATALOG_NAME);
+    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     FileIOFactory fileIOFactory =
         new DefaultFileIOFactory(
-            new RealmEntityManagerFactory(managerFactory), managerFactory, configurationStore);
+            new RealmEntityManagerFactory(managerFactory), managerFactory, configurationStore, fileIOConfiguration);
 
     testPolarisEventListener = (TestPolarisEventListener) polarisEventListener;
     this.catalog =

@@ -21,9 +21,5 @@ package org.apache.polaris.service.quarkus.catalog.io;
 import io.smallrye.config.ConfigMapping;
 import org.apache.polaris.service.catalog.io.FileIOConfiguration;
 
-import java.util.Optional;
-
 @ConfigMapping(prefix = "polaris.file-io")
-public interface QuarkusFileIOConfiguration extends FileIOConfiguration {
-
-}
+public interface QuarkusFileIOConfiguration extends FileIOConfiguration {}

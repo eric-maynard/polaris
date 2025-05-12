@@ -67,6 +67,7 @@ import org.apache.polaris.core.persistence.dao.entity.CreatePrincipalResult;
 import org.apache.polaris.core.persistence.resolver.PolarisResolutionManifest;
 import org.apache.polaris.service.catalog.iceberg.IcebergCatalogHandler;
 import org.apache.polaris.service.catalog.io.DefaultFileIOFactory;
+import org.apache.polaris.service.catalog.io.FileIOConfiguration;
 import org.apache.polaris.service.config.RealmEntityManagerFactory;
 import org.apache.polaris.service.context.CallContextCatalogFactory;
 import org.apache.polaris.service.context.PolarisCallContextCatalogFactory;
@@ -1799,6 +1800,7 @@ public class IcebergCatalogHandlerAuthzTest extends PolarisAuthzTestBase {
     validatePayload.setTimestamp(530950845L);
     validateRequest.setPayload(validatePayload);
 
+    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     PolarisCallContextCatalogFactory factory =
         new PolarisCallContextCatalogFactory(
             new RealmEntityManagerFactory(null) {
@@ -1811,7 +1813,7 @@ public class IcebergCatalogHandlerAuthzTest extends PolarisAuthzTestBase {
             userSecretsManagerFactory,
             Mockito.mock(),
             new DefaultFileIOFactory(
-                realmEntityManagerFactory, managerFactory, new PolarisConfigurationStore() {}),
+                realmEntityManagerFactory, managerFactory, new PolarisConfigurationStore() {}, fileIOConfiguration),
             polarisEventListener) {
           @Override
           public Catalog createCallContextCatalog(

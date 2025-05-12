@@ -114,6 +114,7 @@ import org.apache.polaris.service.catalog.PolarisPassthroughResolutionView;
 import org.apache.polaris.service.catalog.iceberg.IcebergCatalog;
 import org.apache.polaris.service.catalog.io.DefaultFileIOFactory;
 import org.apache.polaris.service.catalog.io.ExceptionMappingFileIO;
+import org.apache.polaris.service.catalog.io.FileIOConfiguration;
 import org.apache.polaris.service.catalog.io.FileIOFactory;
 import org.apache.polaris.service.catalog.io.MeasuredFileIOFactory;
 import org.apache.polaris.service.config.RealmEntityManagerFactory;
@@ -314,8 +315,9 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
 
     RealmEntityManagerFactory realmEntityManagerFactory =
         new RealmEntityManagerFactory(createMockMetaStoreManagerFactory());
+    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     this.fileIOFactory =
-        new DefaultFileIOFactory(realmEntityManagerFactory, managerFactory, configurationStore);
+        new DefaultFileIOFactory(realmEntityManagerFactory, managerFactory, configurationStore, fileIOConfiguration);
 
     StsClient stsClient = Mockito.mock(StsClient.class);
     when(stsClient.assumeRole(isA(AssumeRoleRequest.class)))
@@ -653,12 +655,14 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
     PolarisPassthroughResolutionView passthroughView =
         new PolarisPassthroughResolutionView(
             callContext, entityManager, securityContext, catalog().name());
+    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     FileIOFactory fileIOFactory =
         spy(
             new DefaultFileIOFactory(
                 new RealmEntityManagerFactory(createMockMetaStoreManagerFactory()),
                 managerFactory,
-                configurationStore));
+                configurationStore,
+                fileIOConfiguration));
     IcebergCatalog catalog =
         new IcebergCatalog(
             entityManager,
@@ -1570,12 +1574,14 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
         .containsEntry(StorageAccessProperty.AWS_SECRET_KEY, SECRET_ACCESS_KEY)
         .containsEntry(StorageAccessProperty.AWS_TOKEN, SESSION_TOKEN);
     MetaStoreManagerFactory metaStoreManagerFactory = createMockMetaStoreManagerFactory();
+    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     FileIO fileIO =
         new TaskFileIOSupplier(
                 new DefaultFileIOFactory(
                     new RealmEntityManagerFactory(metaStoreManagerFactory),
                     metaStoreManagerFactory,
-                    configurationStore))
+                    configurationStore,
+                    fileIOConfiguration))
             .apply(taskEntity, callContext);
     Assertions.assertThat(fileIO).isNotNull().isInstanceOf(ExceptionMappingFileIO.class);
     Assertions.assertThat(((ExceptionMappingFileIO) fileIO).getInnerIo())
@@ -1715,11 +1721,13 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
         new PolarisPassthroughResolutionView(
             callContext, entityManager, securityContext, CATALOG_NAME);
 
+    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     MeasuredFileIOFactory measured =
         new MeasuredFileIOFactory(
             new RealmEntityManagerFactory(createMockMetaStoreManagerFactory()),
             managerFactory,
-            configurationStore);
+            configurationStore,
+            fileIOConfiguration);
     IcebergCatalog catalog =
         new IcebergCatalog(
             entityManager,

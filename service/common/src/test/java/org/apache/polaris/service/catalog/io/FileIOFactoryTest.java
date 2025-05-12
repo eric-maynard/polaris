@@ -44,13 +44,16 @@ import org.apache.polaris.core.admin.model.CatalogProperties;
 import org.apache.polaris.core.admin.model.CreateCatalogRequest;
 import org.apache.polaris.core.admin.model.PolarisCatalog;
 import org.apache.polaris.core.admin.model.StorageConfigInfo;
+import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.context.CallContext;
 import org.apache.polaris.core.context.RealmContext;
 import org.apache.polaris.core.entity.*;
+import org.apache.polaris.core.persistence.MetaStoreManagerFactory;
 import org.apache.polaris.core.persistence.pagination.PageToken;
 import org.apache.polaris.service.TestServices;
 import org.apache.polaris.service.catalog.PolarisPassthroughResolutionView;
 import org.apache.polaris.service.catalog.iceberg.IcebergCatalog;
+import org.apache.polaris.service.config.RealmEntityManagerFactory;
 import org.apache.polaris.service.task.TaskFileIOSupplier;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -104,10 +107,19 @@ public class FileIOFactoryTest {
 
     // Spy FileIOFactory and check if the credentials are passed to the FileIO
     TestServices.FileIOFactorySupplier fileIOFactorySupplier =
-        (entityManagerFactory, metaStoreManagerFactory, configurationStore) ->
-            Mockito.spy(
+        new TestServices.FileIOFactorySupplier() {
+          @Override
+          public FileIOFactory apply(
+              RealmEntityManagerFactory realmEntityManagerFactory,
+              MetaStoreManagerFactory metaStoreManagerFactory,
+              PolarisConfigurationStore configurationStore,
+              FileIOConfiguration fileIOConfiguration) {
+            return Mockito.spy(
                 new DefaultFileIOFactory(
-                    entityManagerFactory, metaStoreManagerFactory, configurationStore) {
+                    realmEntityManagerFactory,
+                    metaStoreManagerFactory,
+                    configurationStore,
+                    fileIOConfiguration) {
                   @Override
                   FileIO loadFileIOInternal(
                       @Nonnull String ioImplClassName,
@@ -123,6 +135,8 @@ public class FileIOFactoryTest {
                         ioImplClassName, properties, callContext, tableLocations);
                   }
                 });
+          }
+        };
 
     testServices =
         TestServices.builder()

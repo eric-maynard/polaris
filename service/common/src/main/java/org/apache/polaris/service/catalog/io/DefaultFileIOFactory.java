@@ -33,7 +33,6 @@ import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.hadoop.HadoopFileIO;
 import org.apache.iceberg.io.FileIO;
 import org.apache.iceberg.io.ResolvingFileIO;
-import org.apache.polaris.core.config.BehaviorChangeConfiguration;
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.context.CallContext;
 import org.apache.polaris.core.context.RealmContext;
@@ -61,15 +60,18 @@ public class DefaultFileIOFactory implements FileIOFactory {
   private final RealmEntityManagerFactory realmEntityManagerFactory;
   private final MetaStoreManagerFactory metaStoreManagerFactory;
   private final PolarisConfigurationStore configurationStore;
+  private final FileIOConfiguration fileIOConfiguration;
 
   @Inject
   public DefaultFileIOFactory(
       RealmEntityManagerFactory realmEntityManagerFactory,
       MetaStoreManagerFactory metaStoreManagerFactory,
-      PolarisConfigurationStore configurationStore) {
+      PolarisConfigurationStore configurationStore,
+      FileIOConfiguration fileIOConfiguration) {
     this.realmEntityManagerFactory = realmEntityManagerFactory;
     this.metaStoreManagerFactory = metaStoreManagerFactory;
     this.configurationStore = configurationStore;
+    this.fileIOConfiguration = fileIOConfiguration;
   }
 
   @Override
@@ -124,10 +126,11 @@ public class DefaultFileIOFactory implements FileIOFactory {
       @Nonnull Set<String> tableLocations) {
     FileIO innerFileIO = CatalogUtil.loadFileIO(ioImplClassName, properties, new Configuration());
 
-    boolean prohibitHadoopFileIO =
-        configurationStore.getConfiguration(
-            callContext.getPolarisCallContext(),
-            BehaviorChangeConfiguration.DEFAULT_FILE_IO_FACTORY_DISABLE_HADOOP_FILE_IO);
+    boolean prohibitHadoopFileIO = Optional
+        .ofNullable(fileIOConfiguration.defaultConfig())
+        .map(FileIOConfiguration.DefaultFileIOConfig::allowHadoopFileIO)
+        .flatMap(c -> c)
+        .orElse(false);
 
     if (prohibitHadoopFileIO) {
       boolean isHadoopFileIO = innerFileIO instanceof HadoopFileIO;

@@ -16,26 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.polaris.service.catalog.io;
 
 import java.util.Optional;
 
 public interface FileIOConfiguration {
 
-    /**
-     * The type of the catalog IO to use. Must be a registered {@link
-     * org.apache.polaris.service.catalog.io.FileIOFactory} identifier.
-     */
-    String type();
+  /**
+   * The type of the catalog IO to use. Must be a registered {@link
+   * org.apache.polaris.service.catalog.io.FileIOFactory} identifier.
+   */
+  String type();
 
-    /** Configurations for the DefaultFileIOFactory */
-    DefaultFileIOConfig defaultConfig();
+  /** Configurations for the DefaultFileIOFactory */
+  DefaultFileIOConfig defaultConfig();
 
-    interface DefaultFileIOConfig {
-        /**
-         * Whether to disable the use of HadoopFileIO inside the default FileIOFactory
-         */
-        Optional<Boolean> allowHadoopFileIO();
-    }
+  interface DefaultFileIOConfig {
+    /** Whether to disable the use of HadoopFileIO inside the default FileIOFactory */
+    Optional<Boolean> allowHadoopFileIO();
+  }
 }
