@@ -173,7 +173,7 @@ public record TestServices(
       UserSecretsManager userSecretsManager =
           userSecretsManagerFactory.getOrCreateUserSecretsManager(realmContext);
 
-      FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
+      FileIOConfiguration fileIOConfiguration = new TestFileIOConfiguration() {};
 
       FileIOFactory fileIOFactory =
           fileIOFactorySupplier.apply(

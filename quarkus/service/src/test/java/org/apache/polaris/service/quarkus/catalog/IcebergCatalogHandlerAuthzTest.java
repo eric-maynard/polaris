@@ -65,6 +65,7 @@ import org.apache.polaris.core.entity.PrincipalEntity;
 import org.apache.polaris.core.persistence.PolarisEntityManager;
 import org.apache.polaris.core.persistence.dao.entity.CreatePrincipalResult;
 import org.apache.polaris.core.persistence.resolver.PolarisResolutionManifest;
+import org.apache.polaris.service.TestFileIOConfiguration;
 import org.apache.polaris.service.catalog.iceberg.IcebergCatalogHandler;
 import org.apache.polaris.service.catalog.io.DefaultFileIOFactory;
 import org.apache.polaris.service.catalog.io.FileIOConfiguration;
@@ -1800,7 +1801,7 @@ public class IcebergCatalogHandlerAuthzTest extends PolarisAuthzTestBase {
     validatePayload.setTimestamp(530950845L);
     validateRequest.setPayload(validatePayload);
 
-    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
+    FileIOConfiguration fileIOConfiguration = new TestFileIOConfiguration() {};
     PolarisCallContextCatalogFactory factory =
         new PolarisCallContextCatalogFactory(
             new RealmEntityManagerFactory(null) {
