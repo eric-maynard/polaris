@@ -233,7 +233,10 @@ public class IcebergCatalogViewTest extends ViewCatalogTests<IcebergCatalog> {
     FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     FileIOFactory fileIOFactory =
         new DefaultFileIOFactory(
-            new RealmEntityManagerFactory(managerFactory), managerFactory, configurationStore, fileIOConfiguration);
+            new RealmEntityManagerFactory(managerFactory),
+            managerFactory,
+            configurationStore,
+            fileIOConfiguration);
 
     testPolarisEventListener = (TestPolarisEventListener) polarisEventListener;
     this.catalog =

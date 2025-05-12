@@ -244,7 +244,8 @@ public class GenericTableCatalogTest {
         new RealmEntityManagerFactory(createMockMetaStoreManagerFactory());
     FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
     this.fileIOFactory =
-        new DefaultFileIOFactory(realmEntityManagerFactory, managerFactory, configurationStore, fileIOConfiguration);
+        new DefaultFileIOFactory(
+            realmEntityManagerFactory, managerFactory, configurationStore, fileIOConfiguration);
 
     StsClient stsClient = Mockito.mock(StsClient.class);
     when(stsClient.assumeRole(isA(AssumeRoleRequest.class)))
