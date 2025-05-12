@@ -242,7 +242,7 @@ public class GenericTableCatalogTest {
     TaskExecutor taskExecutor = Mockito.mock();
     RealmEntityManagerFactory realmEntityManagerFactory =
         new RealmEntityManagerFactory(createMockMetaStoreManagerFactory());
-    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
+    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
     this.fileIOFactory =
         new DefaultFileIOFactory(
             realmEntityManagerFactory, managerFactory, configurationStore, fileIOConfiguration);

@@ -315,7 +315,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
 
     RealmEntityManagerFactory realmEntityManagerFactory =
         new RealmEntityManagerFactory(createMockMetaStoreManagerFactory());
-    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
+    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
     this.fileIOFactory =
         new DefaultFileIOFactory(
             realmEntityManagerFactory, managerFactory, configurationStore, fileIOConfiguration);
@@ -656,7 +656,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
     PolarisPassthroughResolutionView passthroughView =
         new PolarisPassthroughResolutionView(
             callContext, entityManager, securityContext, catalog().name());
-    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
+    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
     FileIOFactory fileIOFactory =
         spy(
             new DefaultFileIOFactory(
@@ -1575,7 +1575,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
         .containsEntry(StorageAccessProperty.AWS_SECRET_KEY, SECRET_ACCESS_KEY)
         .containsEntry(StorageAccessProperty.AWS_TOKEN, SESSION_TOKEN);
     MetaStoreManagerFactory metaStoreManagerFactory = createMockMetaStoreManagerFactory();
-    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
+    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
     FileIO fileIO =
         new TaskFileIOSupplier(
                 new DefaultFileIOFactory(
@@ -1722,7 +1722,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
         new PolarisPassthroughResolutionView(
             callContext, entityManager, securityContext, CATALOG_NAME);
 
-    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
+    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
     MeasuredFileIOFactory measured =
         new MeasuredFileIOFactory(
             new RealmEntityManagerFactory(createMockMetaStoreManagerFactory()),

@@ -230,7 +230,7 @@ public class IcebergCatalogViewTest extends ViewCatalogTests<IcebergCatalog> {
     PolarisPassthroughResolutionView passthroughView =
         new PolarisPassthroughResolutionView(
             callContext, entityManager, securityContext, CATALOG_NAME);
-    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
+    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
     FileIOFactory fileIOFactory =
         new DefaultFileIOFactory(
             new RealmEntityManagerFactory(managerFactory),

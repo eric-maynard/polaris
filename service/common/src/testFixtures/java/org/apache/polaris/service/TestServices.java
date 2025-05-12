@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.PolarisDiagnostics;
@@ -127,7 +128,6 @@ public record TestServices(
       DefaultConfigurationStore configurationStore = new DefaultConfigurationStore(config);
       PolarisDiagnostics polarisDiagnostics = Mockito.mock(PolarisDiagnostics.class);
       PolarisAuthorizer authorizer = Mockito.mock(PolarisAuthorizer.class);
-      FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
 
       // Application level
       PolarisStorageIntegrationProviderImpl storageIntegrationProvider =
@@ -172,6 +172,8 @@ public record TestServices(
           metaStoreManagerFactory.getOrCreateMetaStoreManager(realmContext);
       UserSecretsManager userSecretsManager =
           userSecretsManagerFactory.getOrCreateUserSecretsManager(realmContext);
+
+      FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
 
       FileIOFactory fileIOFactory =
           fileIOFactorySupplier.apply(

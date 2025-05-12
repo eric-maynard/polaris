@@ -26,13 +26,21 @@ public interface FileIOConfiguration {
    * The type of the catalog IO to use. Must be a registered {@link
    * org.apache.polaris.service.catalog.io.FileIOFactory} identifier.
    */
-  String type();
+  default String type() {
+    return "default";
+  }
 
   /** Configurations for the DefaultFileIOFactory */
-  DefaultFileIOConfig defaultConfig();
+  default DefaultFileIOConfig defaultConfig() {
+    return new DefaultFileIOConfig() {
+
+    };
+  }
 
   interface DefaultFileIOConfig {
     /** Whether to disable the use of HadoopFileIO inside the default FileIOFactory */
-    Optional<Boolean> allowHadoopFileIO();
+    default Optional<Boolean> allowHadoopFileIO() {
+      return Optional.of(false);
+    }
   }
 }

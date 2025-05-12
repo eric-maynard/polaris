@@ -1800,7 +1800,7 @@ public class IcebergCatalogHandlerAuthzTest extends PolarisAuthzTestBase {
     validatePayload.setTimestamp(530950845L);
     validateRequest.setPayload(validatePayload);
 
-    FileIOConfiguration fileIOConfiguration = Mockito.mock(FileIOConfiguration.class);
+    FileIOConfiguration fileIOConfiguration = new FileIOConfiguration() {};
     PolarisCallContextCatalogFactory factory =
         new PolarisCallContextCatalogFactory(
             new RealmEntityManagerFactory(null) {
