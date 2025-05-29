@@ -18,15 +18,13 @@
  */
 package org.apache.polaris.core.config;
 
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import jakarta.inject.Inject;
-import org.apache.polaris.core.context.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

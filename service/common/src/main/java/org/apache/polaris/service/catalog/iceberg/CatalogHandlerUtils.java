@@ -608,7 +608,6 @@ public class CatalogHandlerUtils {
   }
 
   private int maxCommitRetries() {
-    return configurationStore.getConfiguration(
-        FeatureConfiguration.ICEBERG_COMMIT_MAX_RETRIES);
+    return configurationStore.getConfiguration(FeatureConfiguration.ICEBERG_COMMIT_MAX_RETRIES);
   }
 }

@@ -705,14 +705,12 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
     LOGGER.info(
         "allow external catalog credential vending: {}",
         configurationStore.getConfiguration(
-            catalogEntity,
-            FeatureConfiguration.ALLOW_EXTERNAL_CATALOG_CREDENTIAL_VENDING));
+            catalogEntity, FeatureConfiguration.ALLOW_EXTERNAL_CATALOG_CREDENTIAL_VENDING));
     if (catalogEntity
             .getCatalogType()
             .equals(org.apache.polaris.core.admin.model.Catalog.TypeEnum.EXTERNAL)
         && !configurationStore.getConfiguration(
-        catalogEntity,
-            FeatureConfiguration.ALLOW_EXTERNAL_CATALOG_CREDENTIAL_VENDING)) {
+            catalogEntity, FeatureConfiguration.ALLOW_EXTERNAL_CATALOG_CREDENTIAL_VENDING)) {
       throw new ForbiddenException(
           "Access Delegation is not enabled for this catalog. Please consult applicable "
               + "documentation for the catalog config property '%s' to enable this feature",

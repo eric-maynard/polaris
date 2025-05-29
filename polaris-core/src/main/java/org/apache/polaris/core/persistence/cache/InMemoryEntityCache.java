@@ -23,16 +23,14 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalListener;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import jakarta.inject.Inject;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.config.BehaviorChangeConfiguration;
 import org.apache.polaris.core.config.FeatureConfiguration;
-import org.apache.polaris.core.config.PolarisConfiguration;
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.entity.PolarisBaseEntity;
 import org.apache.polaris.core.entity.PolarisEntityType;

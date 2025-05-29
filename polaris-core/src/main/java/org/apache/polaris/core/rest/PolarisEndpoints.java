@@ -83,8 +83,7 @@ public class PolarisEndpoints {
         callContext
             .getPolarisCallContext()
             .getConfigurationStore()
-            .getConfiguration(
-                FeatureConfiguration.ENABLE_GENERIC_TABLES);
+            .getConfiguration(FeatureConfiguration.ENABLE_GENERIC_TABLES);
 
     return genericTableEnabled ? GENERIC_TABLE_ENDPOINTS : ImmutableSet.of();
   }
@@ -98,8 +97,7 @@ public class PolarisEndpoints {
         callContext
             .getPolarisCallContext()
             .getConfigurationStore()
-            .getConfiguration(
-                FeatureConfiguration.ENABLE_POLICY_STORE);
+            .getConfiguration(FeatureConfiguration.ENABLE_POLICY_STORE);
     return policyStoreEnabled ? POLICY_STORE_ENDPOINTS : ImmutableSet.of();
   }
 }

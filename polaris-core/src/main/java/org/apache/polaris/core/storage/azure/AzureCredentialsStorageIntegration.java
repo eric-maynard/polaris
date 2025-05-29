@@ -36,6 +36,7 @@ import com.azure.storage.file.datalake.models.DataLakeStorageException;
 import com.azure.storage.file.datalake.sas.DataLakeServiceSasSignatureValues;
 import com.azure.storage.file.datalake.sas.PathSasPermission;
 import jakarta.annotation.Nonnull;
+import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.Period;
@@ -45,8 +46,6 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import jakarta.inject.Inject;
 import org.apache.polaris.core.PolarisDiagnostics;
 import org.apache.polaris.core.config.FeatureConfiguration;
 import org.apache.polaris.core.config.PolarisConfigurationStore;
@@ -131,7 +130,8 @@ public class AzureCredentialsStorageIntegration
     // clock skew between the client and server,
     OffsetDateTime startTime = start.truncatedTo(ChronoUnit.SECONDS).atOffset(ZoneOffset.UTC);
     int intendedDurationSeconds =
-        configurationStore.getConfiguration(FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
+        configurationStore.getConfiguration(
+            FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
     OffsetDateTime intendedEndTime =
         start.plusSeconds(intendedDurationSeconds).atOffset(ZoneOffset.UTC);
     OffsetDateTime maxAllowedEndTime =

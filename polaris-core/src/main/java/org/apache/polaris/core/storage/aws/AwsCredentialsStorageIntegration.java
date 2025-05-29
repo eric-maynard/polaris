@@ -21,6 +21,7 @@ package org.apache.polaris.core.storage.aws;
 import static org.apache.polaris.core.config.FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS;
 
 import jakarta.annotation.Nonnull;
+import jakarta.inject.Inject;
 import java.net.URI;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -28,8 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import jakarta.inject.Inject;
 import org.apache.polaris.core.PolarisDiagnostics;
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.storage.InMemoryStorageIntegration;
@@ -84,7 +83,8 @@ public class AwsCredentialsStorageIntegration
                         allowedReadLocations,
                         allowedWriteLocations)
                     .toJson())
-            .durationSeconds(configurationStore.getConfiguration(STORAGE_CREDENTIAL_DURATION_SECONDS));
+            .durationSeconds(
+                configurationStore.getConfiguration(STORAGE_CREDENTIAL_DURATION_SECONDS));
     credentialsProvider.ifPresent(
         cp -> request.overrideConfiguration(b -> b.credentialsProvider(cp)));
     AssumeRoleResponse response = stsClient.assumeRole(request.build());

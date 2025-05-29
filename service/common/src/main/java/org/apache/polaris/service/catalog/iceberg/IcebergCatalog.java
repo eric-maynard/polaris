@@ -519,8 +519,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     if (!callContext
         .getPolarisCallContext()
         .getConfigurationStore()
-        .getConfiguration(
-            FeatureConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP)) {
+        .getConfiguration(FeatureConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP)) {
       LOGGER.debug("Validating no overlap for {} with sibling tables or namespaces", namespace);
       validateNoLocationOverlap(
           entity.getBaseLocation(), resolvedParent.getRawFullPath(), entity.getName());
@@ -661,8 +660,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
                 Map.of(),
                 polarisCallContext
                     .getConfigurationStore()
-                    .getConfiguration(
-                        FeatureConfiguration.CLEANUP_ON_NAMESPACE_DROP));
+                    .getConfiguration(FeatureConfiguration.CLEANUP_ON_NAMESPACE_DROP));
 
     if (!dropEntityResult.isSuccess() && dropEntityResult.failedBecauseNotEmpty()) {
       throw new NamespaceNotEmptyException("Namespace %s is not empty", namespace);
@@ -690,8 +688,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     if (!callContext
         .getPolarisCallContext()
         .getConfigurationStore()
-        .getConfiguration(
-            FeatureConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP)) {
+        .getConfiguration(FeatureConfiguration.ALLOW_NAMESPACE_LOCATION_OVERLAP)) {
       LOGGER.debug("Validating no overlap with sibling tables or namespaces");
       validateNoLocationOverlap(
           NamespaceEntity.of(updatedEntity).getBaseLocation(),
@@ -991,8 +988,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
               callContext
                   .getPolarisCallContext()
                   .getConfigurationStore()
-                  .getConfiguration(
-                      FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES);
+                  .getConfiguration(FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES);
           if (!allowedStorageTypes.contains(StorageConfigInfo.StorageTypeEnum.FILE.name())) {
             List<String> invalidLocations =
                 locations.stream()
@@ -1021,15 +1017,12 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
         callContext
             .getPolarisCallContext()
             .getConfigurationStore()
-            .getConfiguration(
-                BehaviorChangeConfiguration.VALIDATE_VIEW_LOCATION_OVERLAP);
+            .getConfiguration(BehaviorChangeConfiguration.VALIDATE_VIEW_LOCATION_OVERLAP);
 
     if (callContext
         .getPolarisCallContext()
         .getConfigurationStore()
-        .getConfiguration(
-            catalog,
-            FeatureConfiguration.ALLOW_TABLE_LOCATION_OVERLAP)) {
+        .getConfiguration(catalog, FeatureConfiguration.ALLOW_TABLE_LOCATION_OVERLAP)) {
       LOGGER.debug("Skipping location overlap validation for identifier '{}'", identifier);
     } else if (validateViewOverlap
         || entity.getSubType().equals(PolarisEntitySubType.ICEBERG_TABLE)) {
@@ -1959,13 +1952,11 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
     boolean allowEscape =
         polarisCallContext
             .getConfigurationStore()
-            .getConfiguration(
-                FeatureConfiguration.ALLOW_EXTERNAL_TABLE_LOCATION);
+            .getConfiguration(FeatureConfiguration.ALLOW_EXTERNAL_TABLE_LOCATION);
     if (!allowEscape
         && !polarisCallContext
             .getConfigurationStore()
-            .getConfiguration(
-                FeatureConfiguration.ALLOW_EXTERNAL_METADATA_FILE_LOCATION)) {
+            .getConfiguration(FeatureConfiguration.ALLOW_EXTERNAL_METADATA_FILE_LOCATION)) {
       LOGGER.debug(
           "Validating base location {} for table {} in metadata file {}",
           metadata.location(),
@@ -2261,9 +2252,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
           callContext
               .getPolarisCallContext()
               .getConfigurationStore()
-              .getConfiguration(
-                  catalogEntity,
-                  FeatureConfiguration.DROP_WITH_PURGE_ENABLED);
+              .getConfiguration(catalogEntity, FeatureConfiguration.DROP_WITH_PURGE_ENABLED);
       if (!dropWithPurgeEnabled) {
         throw new ForbiddenException(
             String.format(
@@ -2524,9 +2513,7 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
         callContext
             .getPolarisCallContext()
             .getConfigurationStore()
-            .getConfiguration(
-                catalogEntity,
-                FeatureConfiguration.LIST_PAGINATION_ENABLED);
+            .getConfiguration(catalogEntity, FeatureConfiguration.LIST_PAGINATION_ENABLED);
     if (!paginationEnabled) {
       return PageToken.readEverything();
     } else {

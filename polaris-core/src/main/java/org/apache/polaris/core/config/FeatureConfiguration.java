@@ -49,10 +49,7 @@ public class FeatureConfiguration<T> extends PolarisConfiguration<T> {
   public static void enforceFeatureEnabledOrThrow(
       CallContext callContext, FeatureConfiguration<Boolean> featureConfig) {
     boolean enabled =
-        callContext
-            .getPolarisCallContext()
-            .getConfigurationStore()
-            .getConfiguration(featureConfig);
+        callContext.getPolarisCallContext().getConfigurationStore().getConfiguration(featureConfig);
     if (!enabled) {
       throw new UnsupportedOperationException("Feature not enabled: " + featureConfig.key);
     }

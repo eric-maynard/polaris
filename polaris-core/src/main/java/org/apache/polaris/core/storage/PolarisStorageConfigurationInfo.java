@@ -166,8 +166,7 @@ public abstract class PolarisStorageConfigurationInfo {
                       .getPolarisCallContext()
                       .getConfigurationStore()
                       .getConfiguration(
-                          catalog,
-                          FeatureConfiguration.ALLOW_UNSTRUCTURED_TABLE_LOCATION);
+                          catalog, FeatureConfiguration.ALLOW_UNSTRUCTURED_TABLE_LOCATION);
               if (!allowEscape
                   && catalog.getCatalogType() != Catalog.TypeEnum.EXTERNAL
                   && baseLocation != null) {

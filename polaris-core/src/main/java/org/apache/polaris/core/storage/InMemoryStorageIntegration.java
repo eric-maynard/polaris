@@ -80,9 +80,7 @@ public abstract class InMemoryStorageIntegration<T extends PolarisStorageConfigu
         Optional.ofNullable(CallContext.getCurrentContext())
             .flatMap(c -> Optional.ofNullable(c.getPolarisCallContext()))
             .map(
-                pc ->
-                    pc.getConfigurationStore()
-                        .getConfiguration("ALLOW_WILDCARD_LOCATION", false))
+                pc -> pc.getConfigurationStore().getConfiguration("ALLOW_WILDCARD_LOCATION", false))
             .orElse(false);
 
     if (allowWildcardLocation && allowedLocationStrings.contains("*")) {

@@ -24,17 +24,15 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-
-import jakarta.inject.Inject;
 import org.apache.iceberg.exceptions.UnprocessableEntityException;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.config.FeatureConfiguration;
-import org.apache.polaris.core.config.PolarisConfiguration;
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.entity.PolarisEntity;
 import org.apache.polaris.core.entity.PolarisEntityType;
@@ -83,7 +81,8 @@ public class StorageCredentialCache {
         configurationStore.getConfiguration(
             FeatureConfiguration.STORAGE_CREDENTIAL_CACHE_DURATION_SECONDS);
     var credentialDurationSeconds =
-        configurationStore.getConfiguration(FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
+        configurationStore.getConfiguration(
+            FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
     if (cacheDurationSeconds >= credentialDurationSeconds) {
       throw new IllegalArgumentException(
           String.format(

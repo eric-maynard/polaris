@@ -25,7 +25,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.context.RealmContext;
 import org.slf4j.Logger;

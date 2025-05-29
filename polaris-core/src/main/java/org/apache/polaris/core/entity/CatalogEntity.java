@@ -22,6 +22,7 @@ import static org.apache.polaris.core.admin.model.StorageConfigInfo.StorageTypeE
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ import org.apache.polaris.core.admin.model.GcpStorageConfigInfo;
 import org.apache.polaris.core.admin.model.PolarisCatalog;
 import org.apache.polaris.core.admin.model.StorageConfigInfo;
 import org.apache.polaris.core.config.BehaviorChangeConfiguration;
+import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.connection.ConnectionConfigInfoDpo;
 import org.apache.polaris.core.secrets.UserSecretReference;
 import org.apache.polaris.core.storage.FileStorageConfigurationInfo;
@@ -218,6 +220,8 @@ public class CatalogEntity extends PolarisEntity {
   }
 
   public static class Builder extends PolarisEntity.BaseBuilder<CatalogEntity, Builder> {
+    @Inject private PolarisConfigurationStore configurationStore;
+
     public Builder() {
       super();
       setType(PolarisEntityType.CATALOG);
@@ -307,7 +311,7 @@ public class CatalogEntity extends PolarisEntity {
     /** Validate the number of allowed locations not exceeding the max value. */
     private void validateMaxAllowedLocations(Collection<String> allowedLocations) {
       int maxAllowedLocations =
-          BehaviorChangeConfiguration.loadConfig(
+          configurationStore.getConfiguration(
               BehaviorChangeConfiguration.STORAGE_CONFIGURATION_MAX_LOCATIONS);
       if (maxAllowedLocations != -1 && allowedLocations.size() > maxAllowedLocations) {
         throw new IllegalArgumentException(

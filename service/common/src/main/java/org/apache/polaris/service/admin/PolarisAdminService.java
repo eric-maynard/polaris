@@ -605,8 +605,7 @@ public class PolarisAdminService {
     boolean allowOverlappingCatalogUrls =
         getCurrentPolarisContext()
             .getConfigurationStore()
-            .getConfiguration(
-                FeatureConfiguration.ALLOW_OVERLAPPING_CATALOG_URLS);
+            .getConfiguration(FeatureConfiguration.ALLOW_OVERLAPPING_CATALOG_URLS);
 
     if (allowOverlappingCatalogUrls) {
       return false;
