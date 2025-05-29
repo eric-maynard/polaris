@@ -29,10 +29,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+
+import jakarta.inject.Inject;
 import org.apache.iceberg.exceptions.UnprocessableEntityException;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.config.FeatureConfiguration;
 import org.apache.polaris.core.config.PolarisConfiguration;
+import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.entity.PolarisEntity;
 import org.apache.polaris.core.entity.PolarisEntityType;
 import org.apache.polaris.core.persistence.dao.entity.ScopedCredentialsResult;
@@ -48,6 +51,8 @@ public class StorageCredentialCache {
 
   private static final long CACHE_MAX_NUMBER_OF_ENTRIES = 10_000L;
   private final LoadingCache<StorageCredentialCacheKey, StorageCredentialCacheEntry> cache;
+
+  @Inject private PolarisConfigurationStore configurationStore;
 
   /** Initialize the creds cache */
   public StorageCredentialCache() {
@@ -73,12 +78,12 @@ public class StorageCredentialCache {
   }
 
   /** How long credentials should remain in the cache. */
-  private static long maxCacheDurationMs() {
+  private long maxCacheDurationMs() {
     var cacheDurationSeconds =
-        PolarisConfiguration.loadConfig(
+        configurationStore.getConfiguration(
             FeatureConfiguration.STORAGE_CREDENTIAL_CACHE_DURATION_SECONDS);
     var credentialDurationSeconds =
-        PolarisConfiguration.loadConfig(FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
+        configurationStore.getConfiguration(FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
     if (cacheDurationSeconds >= credentialDurationSeconds) {
       throw new IllegalArgumentException(
           String.format(

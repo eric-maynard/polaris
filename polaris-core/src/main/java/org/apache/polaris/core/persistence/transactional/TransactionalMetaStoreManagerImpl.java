@@ -1956,7 +1956,6 @@ public class TransactionalMetaStoreManagerImpl extends BaseMetaStoreManager {
                   callCtx
                       .getConfigurationStore()
                       .getConfiguration(
-                          callCtx,
                           PolarisTaskConstants.TASK_TIMEOUT_MILLIS_CONFIG,
                           PolarisTaskConstants.TASK_TIMEOUT_MILLIS);
               return taskState == null

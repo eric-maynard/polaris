@@ -20,7 +20,6 @@ package org.apache.polaris.service;
 
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
-import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.ws.rs.core.SecurityContext;
 import java.security.Principal;
@@ -103,7 +102,7 @@ public record TestServices(
     }
 
     @Override
-    public <T> @Nullable T getConfiguration(@Nonnull PolarisCallContext ctx, String configName) {
+    public <T> @Nullable T getConfiguration(String configName) {
       @SuppressWarnings("unchecked")
       T confgValue = (T) defaults.get(configName);
       return confgValue;

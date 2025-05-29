@@ -87,7 +87,6 @@ public class FileIOUtil {
 
     boolean skipCredentialSubscopingIndirection =
         configurationStore.getConfiguration(
-            callContext.getPolarisCallContext(),
             FeatureConfiguration.SKIP_CREDENTIAL_SUBSCOPING_INDIRECTION.key,
             FeatureConfiguration.SKIP_CREDENTIAL_SUBSCOPING_INDIRECTION.defaultValue);
     if (skipCredentialSubscopingIndirection) {

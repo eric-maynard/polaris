@@ -99,18 +99,18 @@ public class DefaultConfigurationStoreTest {
 
   @Test
   public void testGetConfiguration() {
-    Object value = configurationStore.getConfiguration(polarisContext, "missingKeyWithoutDefault");
+    Object value = configurationStore.getConfiguration("missingKeyWithoutDefault");
     assertThat(value).isNull();
     Object defaultValue =
         configurationStore.getConfiguration(
-            polarisContext, "missingKeyWithDefault", "defaultValue");
+            "missingKeyWithDefault", "defaultValue");
     assertThat(defaultValue).isEqualTo("defaultValue");
 
     // the falseByDefaultKey is set to false for all realms in Profile.getConfigOverrides
-    assertThat((Boolean) configurationStore.getConfiguration(polarisContext, falseByDefaultKey))
+    assertThat((Boolean) configurationStore.getConfiguration(falseByDefaultKey))
         .isFalse();
     // the trueByDefaultKey is set to true for all realms in Profile.getConfigOverrides
-    assertThat((Boolean) configurationStore.getConfiguration(polarisContext, trueByDefaultKey))
+    assertThat((Boolean) configurationStore.getConfiguration(trueByDefaultKey))
         .isTrue();
   }
 
@@ -120,20 +120,20 @@ public class DefaultConfigurationStoreTest {
     QuarkusMock.installMockForType(realmOneContext, RealmContext.class);
     // the falseByDefaultKey is set to `false` for all realms, but overwrite with value `true` for
     // realmOne.
-    assertThat((Boolean) configurationStore.getConfiguration(polarisContext, falseByDefaultKey))
+    assertThat((Boolean) configurationStore.getConfiguration(falseByDefaultKey))
         .isTrue();
     // the trueByDefaultKey is set to `false` for all realms, no overwrite for realmOne
-    assertThat((Boolean) configurationStore.getConfiguration(polarisContext, trueByDefaultKey))
+    assertThat((Boolean) configurationStore.getConfiguration(trueByDefaultKey))
         .isTrue();
 
     // check the realmTwo configuration
     QuarkusMock.installMockForType(realmTwoContext, RealmContext.class);
     // the falseByDefaultKey is set to `false` for all realms, no overwrite for realmTwo
-    assertThat((Boolean) configurationStore.getConfiguration(polarisContext, falseByDefaultKey))
+    assertThat((Boolean) configurationStore.getConfiguration(falseByDefaultKey))
         .isFalse();
     // the trueByDefaultKey is set to `false` for all realms, and overwrite with value `false` for
     // realmTwo
-    assertThat((Boolean) configurationStore.getConfiguration(polarisContext, trueByDefaultKey))
+    assertThat((Boolean) configurationStore.getConfiguration(trueByDefaultKey))
         .isFalse();
   }
 
@@ -141,17 +141,17 @@ public class DefaultConfigurationStoreTest {
   public void testInjectedConfigurationStore() {
     // the default value for trueByDefaultKey is `true`
     boolean featureDefaultValue =
-        configurationStore.getConfiguration(polarisContext, trueByDefaultKey);
+        configurationStore.getConfiguration(trueByDefaultKey);
     assertThat(featureDefaultValue).isTrue();
 
     QuarkusMock.installMockForType(realmTwoContext, RealmContext.class);
     // the value for falseByDefaultKey is `false`, and no realm override for realmTwo
-    boolean realmTwoValue = configurationStore.getConfiguration(polarisContext, falseByDefaultKey);
+    boolean realmTwoValue = configurationStore.getConfiguration(falseByDefaultKey);
     assertThat(realmTwoValue).isFalse();
 
     // Now, realmOne override falseByDefaultKey to `True`
     QuarkusMock.installMockForType(realmOneContext, RealmContext.class);
-    boolean realmOneValue = configurationStore.getConfiguration(polarisContext, falseByDefaultKey);
+    boolean realmOneValue = configurationStore.getConfiguration(falseByDefaultKey);
     assertThat(realmOneValue).isTrue();
 
     assertThat(configurationStore).isInstanceOf(DefaultConfigurationStore.class);
@@ -208,14 +208,14 @@ public class DefaultConfigurationStoreTest {
 
     CatalogEntity catalog = new CatalogEntity.Builder().build();
 
-    Assertions.assertThat(configurationStore.getConfiguration(polarisContext, catalog, safeConfig))
+    Assertions.assertThat(configurationStore.getConfiguration(catalog, safeConfig))
         .isTrue();
 
     Assertions.assertThat(
-            configurationStore.getConfiguration(polarisContext, catalog, unsafeConfig))
+            configurationStore.getConfiguration(catalog, unsafeConfig))
         .isTrue();
 
-    Assertions.assertThat(configurationStore.getConfiguration(polarisContext, catalog, bothConfig))
+    Assertions.assertThat(configurationStore.getConfiguration(catalog, bothConfig))
         .isTrue();
   }
 }

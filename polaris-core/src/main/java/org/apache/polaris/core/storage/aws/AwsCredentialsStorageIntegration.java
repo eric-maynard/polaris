@@ -19,7 +19,6 @@
 package org.apache.polaris.core.storage.aws;
 
 import static org.apache.polaris.core.config.FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS;
-import static org.apache.polaris.core.config.PolarisConfiguration.loadConfig;
 
 import jakarta.annotation.Nonnull;
 import java.net.URI;
@@ -29,7 +28,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import jakarta.inject.Inject;
 import org.apache.polaris.core.PolarisDiagnostics;
+import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.storage.InMemoryStorageIntegration;
 import org.apache.polaris.core.storage.StorageAccessProperty;
 import org.apache.polaris.core.storage.StorageUtil;
@@ -48,6 +50,8 @@ public class AwsCredentialsStorageIntegration
     extends InMemoryStorageIntegration<AwsStorageConfigurationInfo> {
   private final StsClient stsClient;
   private final Optional<AwsCredentialsProvider> credentialsProvider;
+
+  @Inject PolarisConfigurationStore configurationStore;
 
   public AwsCredentialsStorageIntegration(StsClient stsClient) {
     this(stsClient, Optional.empty());
@@ -80,7 +84,7 @@ public class AwsCredentialsStorageIntegration
                         allowedReadLocations,
                         allowedWriteLocations)
                     .toJson())
-            .durationSeconds(loadConfig(STORAGE_CREDENTIAL_DURATION_SECONDS));
+            .durationSeconds(configurationStore.getConfiguration(STORAGE_CREDENTIAL_DURATION_SECONDS));
     credentialsProvider.ifPresent(
         cp -> request.overrideConfiguration(b -> b.credentialsProvider(cp)));
     AssumeRoleResponse response = stsClient.assumeRole(request.build());

@@ -24,7 +24,7 @@ import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.polaris.core.PolarisCallContext;
+
 import org.apache.polaris.core.entity.CatalogEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +39,11 @@ public interface PolarisConfigurationStore {
   /**
    * Retrieve the current value for a configuration key. May be null if not set.
    *
-   * @param ctx the current call context
+   * @param <T>        the type of the configuration value
    * @param configName the name of the configuration key to check
    * @return the current value set for the configuration key or null if not set
-   * @param <T> the type of the configuration value
    */
-  default <T> @Nullable T getConfiguration(PolarisCallContext ctx, String configName) {
+  default <T> @Nullable T getConfiguration(String configName) {
     return null;
   }
 
@@ -52,16 +51,15 @@ public interface PolarisConfigurationStore {
    * Retrieve the current value for a configuration key. If not set, return the non-null default
    * value.
    *
-   * @param ctx the current call context
-   * @param configName the name of the configuration key to check
+   * @param <T>          the type of the configuration value
+   * @param configName   the name of the configuration key to check
    * @param defaultValue the default value if the configuration key has no value
    * @return the current value or the supplied default value
-   * @param <T> the type of the configuration value
    */
   default <T> @Nonnull T getConfiguration(
-      PolarisCallContext ctx, String configName, @Nonnull T defaultValue) {
+      String configName, @Nonnull T defaultValue) {
     Preconditions.checkNotNull(defaultValue, "Cannot pass null as a default value");
-    T configValue = getConfiguration(ctx, configName);
+    T configValue = getConfiguration(configName);
     return configValue != null ? configValue : defaultValue;
   }
 
@@ -92,13 +90,12 @@ public interface PolarisConfigurationStore {
   /**
    * Retrieve the current value for a configuration.
    *
-   * @param ctx the current call context
+   * @param <T>    the type of the configuration value
    * @param config the configuration to load
    * @return the current value set for the configuration key or null if not set
-   * @param <T> the type of the configuration value
    */
-  default <T> @Nonnull T getConfiguration(PolarisCallContext ctx, PolarisConfiguration<T> config) {
-    T result = getConfiguration(ctx, config.key, config.defaultValue);
+  default <T> @Nonnull T getConfiguration(PolarisConfiguration<T> config) {
+    T result = getConfiguration(config.key, config.defaultValue);
     return tryCast(config, result);
   }
 
@@ -106,14 +103,12 @@ public interface PolarisConfigurationStore {
    * Retrieve the current value for a configuration, overriding with a catalog config if it is
    * present.
    *
-   * @param ctx the current call context
+   * @param <T>           the type of the configuration value
    * @param catalogEntity the catalog to check for an override
-   * @param config the configuration to load
+   * @param config        the configuration to load
    * @return the current value set for the configuration key or null if not set
-   * @param <T> the type of the configuration value
    */
   default <T> @Nonnull T getConfiguration(
-      PolarisCallContext ctx,
       @Nonnull CatalogEntity catalogEntity,
       PolarisConfiguration<T> config) {
     if (config.hasCatalogConfig() || config.hasCatalogConfigUnsafe()) {
@@ -137,6 +132,6 @@ public interface PolarisConfigurationStore {
         return tryCast(config, propertyValue);
       }
     }
-    return getConfiguration(ctx, config);
+    return getConfiguration(config);
   }
 }

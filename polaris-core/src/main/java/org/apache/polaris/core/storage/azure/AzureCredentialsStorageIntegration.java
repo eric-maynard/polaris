@@ -45,8 +45,11 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
+import jakarta.inject.Inject;
 import org.apache.polaris.core.PolarisDiagnostics;
 import org.apache.polaris.core.config.FeatureConfiguration;
+import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.storage.InMemoryStorageIntegration;
 import org.apache.polaris.core.storage.StorageAccessProperty;
 import org.slf4j.Logger;
@@ -61,6 +64,8 @@ public class AzureCredentialsStorageIntegration
       LoggerFactory.getLogger(AzureCredentialsStorageIntegration.class);
 
   final DefaultAzureCredential defaultAzureCredential;
+
+  @Inject private PolarisConfigurationStore configurationStore;
 
   public AzureCredentialsStorageIntegration() {
     super(AzureCredentialsStorageIntegration.class.getName());
@@ -126,7 +131,7 @@ public class AzureCredentialsStorageIntegration
     // clock skew between the client and server,
     OffsetDateTime startTime = start.truncatedTo(ChronoUnit.SECONDS).atOffset(ZoneOffset.UTC);
     int intendedDurationSeconds =
-        FeatureConfiguration.loadConfig(FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
+        configurationStore.getConfiguration(FeatureConfiguration.STORAGE_CREDENTIAL_DURATION_SECONDS);
     OffsetDateTime intendedEndTime =
         start.plusSeconds(intendedDurationSeconds).atOffset(ZoneOffset.UTC);
     OffsetDateTime maxAllowedEndTime =

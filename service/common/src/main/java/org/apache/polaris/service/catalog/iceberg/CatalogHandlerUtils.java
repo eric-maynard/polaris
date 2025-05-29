@@ -609,6 +609,6 @@ public class CatalogHandlerUtils {
 
   private int maxCommitRetries() {
     return configurationStore.getConfiguration(
-        polarisCallContext, FeatureConfiguration.ICEBERG_COMMIT_MAX_RETRIES);
+        FeatureConfiguration.ICEBERG_COMMIT_MAX_RETRIES);
   }
 }

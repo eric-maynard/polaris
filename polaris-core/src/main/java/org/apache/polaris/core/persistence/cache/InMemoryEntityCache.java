@@ -27,10 +27,13 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.inject.Inject;
 import org.apache.polaris.core.PolarisCallContext;
 import org.apache.polaris.core.config.BehaviorChangeConfiguration;
 import org.apache.polaris.core.config.FeatureConfiguration;
 import org.apache.polaris.core.config.PolarisConfiguration;
+import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.entity.PolarisBaseEntity;
 import org.apache.polaris.core.entity.PolarisEntityType;
 import org.apache.polaris.core.entity.PolarisGrantRecord;
@@ -52,6 +55,8 @@ public class InMemoryEntityCache implements EntityCache {
 
   // index by name
   private final AbstractMap<EntityCacheByNameKey, ResolvedPolarisEntity> byName;
+
+  @Inject private PolarisConfigurationStore configurationStore;
 
   /**
    * Constructor. Cache can be private or shared
@@ -76,7 +81,7 @@ public class InMemoryEntityCache implements EntityCache {
         };
 
     long weigherTarget =
-        PolarisConfiguration.loadConfig(FeatureConfiguration.ENTITY_CACHE_WEIGHER_TARGET);
+        configurationStore.getConfiguration(FeatureConfiguration.ENTITY_CACHE_WEIGHER_TARGET);
     Caffeine<Long, ResolvedPolarisEntity> byIdBuilder =
         Caffeine.newBuilder()
             .maximumWeight(weigherTarget)
@@ -84,7 +89,7 @@ public class InMemoryEntityCache implements EntityCache {
             .expireAfterAccess(1, TimeUnit.HOURS) // Expire entries after 1 hour of no access
             .removalListener(removalListener); // Set the removal listener
 
-    if (PolarisConfiguration.loadConfig(BehaviorChangeConfiguration.ENTITY_CACHE_SOFT_VALUES)) {
+    if (configurationStore.getConfiguration(BehaviorChangeConfiguration.ENTITY_CACHE_SOFT_VALUES)) {
       byIdBuilder.softValues();
     }
 

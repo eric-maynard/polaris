@@ -19,14 +19,13 @@
 package org.apache.polaris.service.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
-import org.apache.polaris.core.PolarisCallContext;
+
 import org.apache.polaris.core.config.PolarisConfigurationStore;
 import org.apache.polaris.core.context.RealmContext;
 import org.slf4j.Logger;
@@ -50,7 +49,7 @@ public class DefaultConfigurationStore implements PolarisConfigurationStore {
   }
 
   @Override
-  public <T> @Nullable T getConfiguration(@Nonnull PolarisCallContext ctx, String configName) {
+  public <T> @Nullable T getConfiguration(String configName) {
     if (!realmContextInstance.isUnsatisfied()) {
       RealmContext realmContext = realmContextInstance.get();
       String realm = realmContext.getRealmIdentifier();

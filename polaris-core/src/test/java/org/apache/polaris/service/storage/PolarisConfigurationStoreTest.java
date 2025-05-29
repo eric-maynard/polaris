@@ -49,7 +49,7 @@ public class PolarisConfigurationStoreTest {
            */
           @SuppressWarnings("unchecked")
           @Override
-          public <T> @Nullable T getConfiguration(PolarisCallContext ctx, String configName) {
+          public <T> @Nullable T getConfiguration(String configName) {
             for (PolarisConfiguration<?> c : configs) {
               if (c.key.equals(configName)) {
                 return (T) String.valueOf(c.defaultValue);
@@ -67,7 +67,7 @@ public class PolarisConfigurationStoreTest {
     // is the config's default value based on how we've implemented PolarisConfigurationStore above.
     PolarisCallContext polarisCallContext = Mockito.mock(PolarisCallContext.class);
     for (PolarisConfiguration<?> c : configs) {
-      Assertions.assertEquals(c.defaultValue, store.getConfiguration(polarisCallContext, c));
+      Assertions.assertEquals(c.defaultValue, store.getConfiguration(c));
     }
   }
 
@@ -81,7 +81,7 @@ public class PolarisConfigurationStoreTest {
         new PolarisConfigurationStore() {
           @SuppressWarnings("unchecked")
           @Override
-          public <T> T getConfiguration(PolarisCallContext ctx, String configName) {
+          public <T> T getConfiguration(String configName) {
             return (T) "abc123";
           }
         };
@@ -89,7 +89,7 @@ public class PolarisConfigurationStoreTest {
     PolarisCallContext polarisCallContext = Mockito.mock(PolarisCallContext.class);
     for (PolarisConfiguration<?> c : configs) {
       Assertions.assertThrows(
-          NumberFormatException.class, () -> store.getConfiguration(polarisCallContext, c));
+          NumberFormatException.class, () -> store.getConfiguration(c));
     }
   }
 
@@ -114,7 +114,7 @@ public class PolarisConfigurationStoreTest {
 
     public <T> T consumeConfiguration(
         PolarisConfiguration<Boolean> config, Supplier<T> code, T defaultVal) {
-      if (configurationStore.getConfiguration(polarisCallContext, config)) {
+      if (configurationStore.getConfiguration(config)) {
         return code.get();
       }
       return defaultVal;

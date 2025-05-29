@@ -1032,7 +1032,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
     PolarisCallContext polarisCallContext = callContext.getPolarisCallContext();
     if (!polarisCallContext
         .getConfigurationStore()
-        .getConfiguration(polarisCallContext, FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES)
+        .getConfiguration(FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES)
         .contains("FILE")) {
       Assertions.assertThatThrownBy(() -> catalog.sendNotification(table, request))
           .isInstanceOf(ForbiddenException.class)
@@ -1100,7 +1100,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
     PolarisCallContext polarisCallContext = callContext.getPolarisCallContext();
     if (!polarisCallContext
         .getConfigurationStore()
-        .getConfiguration(polarisCallContext, FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES)
+        .getConfiguration(FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES)
         .contains("FILE")) {
       Assertions.assertThatThrownBy(() -> catalog.sendNotification(table, request))
           .isInstanceOf(ForbiddenException.class)
@@ -1121,7 +1121,7 @@ public abstract class IcebergCatalogTest extends CatalogTests<IcebergCatalog> {
 
     if (!polarisCallContext
         .getConfigurationStore()
-        .getConfiguration(polarisCallContext, FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES)
+        .getConfiguration(FeatureConfiguration.SUPPORTED_CATALOG_STORAGE_TYPES)
         .contains("FILE")) {
       Assertions.assertThatThrownBy(() -> catalog.sendNotification(table, newRequest))
           .isInstanceOf(ForbiddenException.class)
