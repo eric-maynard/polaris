@@ -59,6 +59,8 @@ import org.apache.polaris.service.config.RealmEntityManagerFactory;
 import org.apache.polaris.service.config.ReservedProperties;
 import org.apache.polaris.service.context.catalog.CallContextCatalogFactory;
 import org.apache.polaris.service.context.catalog.PolarisCallContextCatalogFactory;
+import org.apache.polaris.service.conversion.TableConverter;
+import org.apache.polaris.service.conversion.TableConverterRegistry;
 import org.apache.polaris.service.events.PolarisEventListener;
 import org.apache.polaris.service.events.TestPolarisEventListener;
 import org.apache.polaris.service.persistence.InMemoryPolarisMetaStoreManagerFactory;
@@ -191,6 +193,14 @@ public record TestServices(
 
       TaskExecutor taskExecutor = Mockito.mock(TaskExecutor.class);
 
+      TableConverterRegistry tableConverterRegistry =
+          new TableConverterRegistry() {
+            @Override
+            public TableConverter getConverter(String format) {
+              return null;
+            }
+          };
+
       PolarisEventListener polarisEventListener = new TestPolarisEventListener();
       CallContextCatalogFactory callContextFactory =
           new PolarisCallContextCatalogFactory(
@@ -217,7 +227,8 @@ public record TestServices(
               authorizer,
               new DefaultCatalogPrefixParser(),
               reservedProperties,
-              catalogHandlerUtils);
+              catalogHandlerUtils,
+              tableConverterRegistry);
 
       IcebergRestCatalogApi restApi = new IcebergRestCatalogApi(service);
       IcebergRestConfigurationApi restConfigurationApi = new IcebergRestConfigurationApi(service);
