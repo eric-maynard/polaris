@@ -114,6 +114,7 @@ dependencies {
     exclude(group = "org.scala-lang", module = "scala-library")
     exclude(group = "org.scala-lang", module = "scala-reflect")
   }
+  runtimeOnly(project(":polaris-conversion-xtable"))
   testImplementation(platform(libs.quarkus.bom))
   testImplementation("io.quarkus:quarkus-junit5")
   testImplementation("io.quarkus:quarkus-junit5-mockito")
@@ -126,6 +127,7 @@ dependencies {
 
   testImplementation(project(":polaris-quarkus-test-commons"))
   testImplementation("io.quarkus:quarkus-junit5")
+  implementation(libs.awaitility)
   testImplementation(platform(libs.testcontainers.bom))
   testImplementation("org.testcontainers:testcontainers")
   testImplementation("org.testcontainers:postgresql")
