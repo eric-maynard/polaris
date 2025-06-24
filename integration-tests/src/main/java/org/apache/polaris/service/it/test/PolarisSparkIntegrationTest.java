@@ -166,8 +166,7 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
     onSpark("DESCRIBE EXTENDED t1").show(false);
 
     // Blow away the table's files:
-    // spark.sql("SELECT 1").write().mode("overwrite").json(catalogBaseLocation + "/ns/t1");
-    deletePathRecursively(catalogBaseLocation + "/ns/t1");
+    spark.sql("SELECT 1").write().mode("overwrite").json(catalogBaseLocation + "/ns/t1");
 
     onSpark("DROP TABLE t1");
   }
@@ -181,34 +180,6 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
             .get()) {
       assertThat(response).returns(Response.Status.OK.getStatusCode(), Response::getStatus);
       return response.readEntity(LoadTableResponse.class);
-    }
-  }
-
-  private void deletePathRecursively(String pathStr) {
-    Configuration hadoopConf = spark.sparkContext().hadoopConfiguration();
-    hadoopConf
-        .iterator()
-        .forEachRemaining(
-            entry -> {
-              if (entry.getKey().startsWith("fs.s3a")) {
-                System.out.println("#### " + entry.getKey() + " = " + entry.getValue());
-              }
-            });
-    Path path = new Path(pathStr);
-    try {
-      FileSystem fs = path.getFileSystem(hadoopConf);
-      if (fs.exists(path)) {
-        boolean deleted = fs.delete(path, true);
-        if (deleted) {
-          LOGGER.info("Deleted " + pathStr);
-        } else {
-          throw new RuntimeException("Failed to delete: " + pathStr);
-        }
-      } else {
-        throw new RuntimeException("Path does not exist: " + pathStr);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
   }
 }
