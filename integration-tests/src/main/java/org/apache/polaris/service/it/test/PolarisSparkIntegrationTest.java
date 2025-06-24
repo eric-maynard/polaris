@@ -24,14 +24,22 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
+
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.rest.requests.ImmutableRegisterTableRequest;
 import org.apache.iceberg.rest.responses.LoadTableResponse;
 import org.apache.polaris.service.it.ext.PolarisSparkIntegrationTestBase;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @implSpec This test expects the server to be configured with the following features enabled:
@@ -45,6 +53,7 @@ import org.junit.jupiter.api.Test;
  *     </ul>
  */
 public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase {
+  Logger LOGGER = LoggerFactory.getLogger(PolarisSparkIntegrationTest.class);
 
   @Test
   public void testCreateTable() {
@@ -147,6 +156,21 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
     assertThat(recordCount).isEqualTo(3);
   }
 
+  @Test
+  public void testBlindDropTable() {
+    long namespaceCount = onSpark("SHOW NAMESPACES").count();
+    assertThat(namespaceCount).isEqualTo(0L);
+
+    onSpark("CREATE NAMESPACE ns");
+    onSpark("USE ns");
+    onSpark("CREATE TABLE t1 (data string)");
+    onSpark("DESCRIBE EXTENDED t1");
+
+    // deletePathRecursively();
+
+    onSpark("DROP TABLE t1");
+  }
+
   private LoadTableResponse loadTable(String catalog, String namespace, String table) {
     try (Response response =
         catalogApi
@@ -156,6 +180,26 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
             .get()) {
       assertThat(response).returns(Response.Status.OK.getStatusCode(), Response::getStatus);
       return response.readEntity(LoadTableResponse.class);
+    }
+  }
+
+  private void deletePathRecursively(String pathStr) {
+    Configuration hadoopConf = spark.sparkContext().hadoopConfiguration();
+    Path path = new Path(pathStr);
+    try {
+      FileSystem fs = path.getFileSystem(hadoopConf);
+      if (fs.exists(path)) {
+        boolean deleted = fs.delete(path, true);
+        if (deleted) {
+          LOGGER.info("Deleted " + pathStr);
+        } else {
+          throw new RuntimeException("Failed to delete: " + pathStr);
+        }
+      } else {
+        throw new RuntimeException("Path does not exist: " + pathStr);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 }
