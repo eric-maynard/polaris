@@ -300,11 +300,11 @@ public class FeatureConfiguration<T> extends PolarisConfiguration<T> {
           .buildFeatureConfiguration();
 
   public static final FeatureConfiguration<Boolean> BLIND_DROP_TABLE_ENABLED =
-    PolarisConfiguration.<Boolean>builder()
-      .key("BLIND_DROP_TABLE_ENABLED")
-      .description(
-        "When enabled, it's possible to drop a table even if the underlying metadata files cannot "
-          + "be read")
-      .defaultValue(false)
-      .buildFeatureConfiguration();
+      PolarisConfiguration.<Boolean>builder()
+          .key("BLIND_DROP_TABLE_ENABLED")
+          .description(
+              "When enabled, it's possible to drop a table even if the underlying metadata files cannot "
+                  + "be read")
+          .defaultValue(false)
+          .buildFeatureConfiguration();
 }

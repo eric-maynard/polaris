@@ -44,6 +44,14 @@ dependencies {
     exclude("log4j", "log4j")
     exclude("org.apache.zookeeper", "zookeeper")
   }
+  implementation(libs.hadoop.aws) {
+    exclude("org.slf4j", "slf4j-reload4j")
+    exclude("org.slf4j", "slf4j-log4j12")
+    exclude("ch.qos.reload4j", "reload4j")
+    exclude("log4j", "log4j")
+    exclude("org.apache.zookeeper", "zookeeper")
+  }
+  implementation("com.amazonaws:aws-java-sdk-bundle:1.12.529")
 
   implementation(libs.auth0.jwt)
 

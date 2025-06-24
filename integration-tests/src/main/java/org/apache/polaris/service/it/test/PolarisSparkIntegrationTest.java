@@ -24,12 +24,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -161,12 +159,15 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
     long namespaceCount = onSpark("SHOW NAMESPACES").count();
     assertThat(namespaceCount).isEqualTo(0L);
 
+    onSpark("USE " + catalogName);
     onSpark("CREATE NAMESPACE ns");
     onSpark("USE ns");
     onSpark("CREATE TABLE t1 (data string)");
-    onSpark("DESCRIBE EXTENDED t1");
+    onSpark("DESCRIBE EXTENDED t1").show(false);
 
-    // deletePathRecursively();
+    // Blow away the table's files:
+    // spark.sql("SELECT 1").write().mode("overwrite").json(catalogBaseLocation + "/ns/t1");
+    deletePathRecursively(catalogBaseLocation + "/ns/t1");
 
     onSpark("DROP TABLE t1");
   }
@@ -185,6 +186,14 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
 
   private void deletePathRecursively(String pathStr) {
     Configuration hadoopConf = spark.sparkContext().hadoopConfiguration();
+    hadoopConf
+        .iterator()
+        .forEachRemaining(
+            entry -> {
+              if (entry.getKey().startsWith("fs.s3a")) {
+                System.out.println("#### " + entry.getKey() + " = " + entry.getValue());
+              }
+            });
     Path path = new Path(pathStr);
     try {
       FileSystem fs = path.getFileSystem(hadoopConf);
