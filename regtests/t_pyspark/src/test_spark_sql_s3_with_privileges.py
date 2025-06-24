@@ -1227,6 +1227,28 @@ def test_spark_credentials_s3_exception_on_metadata_file_deletion(root_client, s
         spark.sql('DROP NAMESPACE db1.schema')
         spark.sql('DROP NAMESPACE db1')
 
+
+@pytest.mark.skipif(os.environ.get('AWS_TEST_ENABLED', 'False').lower() != 'true',
+                    reason='AWS_TEST_ENABLED is not set or is false')
+def test_blind_drop_table(snowflake_catalog, polaris_catalog_url, snowman):
+    """
+    Create a table, delete its data files, and ensure it can still be dropped
+    """
+    with IcebergSparkSession(credentials=f'{snowman.principal.client_id}:{snowman.credentials.client_secret.get_secret_value()}',
+                             catalog_name=snowflake_catalog.name,
+                             polaris_url=polaris_catalog_url) as spark:
+        table_name = f'iceberg_test_table_{str(uuid.uuid4())[-10:]}'
+        spark.sql(f'USE {snowflake_catalog.name}')
+        spark.sql('CREATE NAMESPACE ns')
+        spark.sql('USE ns')
+        spark.sql(f'CREATE TABLE {table_name}_t1 (col1 int)')
+
+        table_location = snowflake_catalog.properties.default_base_location + f'/ns/{table_name}_t1/'
+        delete_path_recursively(spark, table_location)
+
+        # drop the table
+        spark.sql(f"drop table {table_name}_t1")
+
 def create_catalog_role(api, catalog, role_name):
   catalog_role = CatalogRole(name=role_name)
   try:
@@ -1246,3 +1268,17 @@ def create_principal_role(api, role_name):
     return api.get_principal_role(principal_role_name=role_name)
   except ApiException as e:
     return api.get_principal_role(principal_role_name=role_name)
+
+
+def delete_path_recursively(spark, path_str):
+    sc = spark.sparkContext
+
+    hadoop_conf = sc._jsc.hadoopConfiguration()
+    fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(hadoop_conf)
+    path = sc._jvm.org.apache.hadoop.fs.Path(path_str)
+
+    if fs.exists(path):
+        fs.delete(path, True)
+        print(f"Deleted: {path_str}")
+    else:
+        print(f"Path does not exist: {path_str}")
