@@ -23,9 +23,16 @@ import static org.apache.polaris.service.it.env.PolarisClient.polarisClient;
 import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.apache.polaris.core.admin.model.AwsStorageConfigInfo;
 import org.apache.polaris.core.admin.model.Catalog;
 import org.apache.polaris.core.admin.model.CatalogProperties;
@@ -236,5 +243,15 @@ public abstract class PolarisSparkIntegrationTestBase {
 
   protected static Dataset<Row> onSpark(@Language("SQL") String sql) {
     return spark.sql(sql);
+  }
+
+  protected AmazonS3 buildS3Client() {
+    return AmazonS3ClientBuilder.standard()
+      .withEndpointConfiguration(
+        new AwsClientBuilder.EndpointConfiguration(s3Container.getHttpEndpoint(), "us-east-1"))
+      .withCredentials(new AWSStaticCredentialsProvider(
+        new BasicAWSCredentials("accesskey", "secretkey")))
+      .withPathStyleAccessEnabled(true)
+      .build();
   }
 }

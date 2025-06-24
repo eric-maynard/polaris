@@ -21,6 +21,8 @@ package org.apache.polaris.service.it.test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.google.common.collect.ImmutableMap;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
@@ -28,6 +30,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -163,12 +167,41 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
     onSpark("CREATE NAMESPACE ns");
     onSpark("USE ns");
     onSpark("CREATE TABLE t1 (data string)");
-    onSpark("DESCRIBE EXTENDED t1").show(false);
 
     // Blow away the table's files:
-    spark.sql("SELECT 1").write().mode("overwrite").json(catalogBaseLocation + "/ns/t1");
+    deleteS3Prefix("my-bucket", "path/to/data/ns/t1");
 
-    onSpark("DROP TABLE t1");
+    onSpark("DROP TABLE t1").count();
+  }
+
+  private void deleteS3Prefix(String bucket, String prefix) {
+    AmazonS3 client = buildS3Client();
+    try {
+      var files = client.listObjects(bucket, prefix);
+      while (true) {
+        List<DeleteObjectsRequest.KeyVersion> keysToDelete =
+          files.getObjectSummaries().stream()
+            .map(o -> new DeleteObjectsRequest.KeyVersion(o.getKey()))
+            .collect(Collectors.toList());
+
+        if (!keysToDelete.isEmpty()) {
+          DeleteObjectsRequest deleteRequest = new DeleteObjectsRequest(bucket)
+            .withKeys(keysToDelete);
+          client.deleteObjects(deleteRequest);
+          keysToDelete.forEach(k -> {
+            LOGGER.info("Deleting file {}", k.getKey());
+          });
+        }
+
+        if (files.isTruncated()) {
+          files = client.listNextBatchOfObjects(files);
+        } else {
+          break;
+        }
+      }
+    } finally {
+      client.shutdown();
+    }
   }
 
   private LoadTableResponse loadTable(String catalog, String namespace, String table) {

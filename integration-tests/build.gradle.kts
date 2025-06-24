@@ -44,20 +44,13 @@ dependencies {
     exclude("log4j", "log4j")
     exclude("org.apache.zookeeper", "zookeeper")
   }
-  implementation(libs.hadoop.aws) {
-    exclude("org.slf4j", "slf4j-reload4j")
-    exclude("org.slf4j", "slf4j-log4j12")
-    exclude("ch.qos.reload4j", "reload4j")
-    exclude("log4j", "log4j")
-    exclude("org.apache.zookeeper", "zookeeper")
-  }
-  implementation("com.amazonaws:aws-java-sdk-bundle:1.12.529")
 
   implementation(libs.auth0.jwt)
 
   implementation(platform(libs.testcontainers.bom))
   implementation("org.testcontainers:testcontainers")
   implementation(libs.s3mock.testcontainers)
+  implementation("com.amazonaws:aws-java-sdk-s3:1.12.557")
 
   implementation("org.apache.iceberg:iceberg-spark-3.5_2.12")
   implementation("org.apache.iceberg:iceberg-spark-extensions-3.5_2.12")
