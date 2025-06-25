@@ -19,6 +19,7 @@
 package org.apache.polaris.service.it.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -167,9 +168,12 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
     onSpark("CREATE NAMESPACE ns");
     onSpark("USE ns");
     onSpark("CREATE TABLE t1 (data string)");
+    onSpark("INSERT INTO t1 VALUES ('a')");
 
     // Blow away the table's files:
     deleteS3Prefix("my-bucket", "path/to/data/ns/t1");
+
+    assertThatCode(() -> onSpark("SELECT * FROM t1").count()).hasMessageContaining("404");
 
     onSpark("DROP TABLE t1").count();
 
