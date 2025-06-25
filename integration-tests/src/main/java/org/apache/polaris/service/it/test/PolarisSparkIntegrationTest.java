@@ -172,6 +172,8 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
     deleteS3Prefix("my-bucket", "path/to/data/ns/t1");
 
     onSpark("DROP TABLE t1").count();
+
+    assertThat(onSpark("SHOW TABLES").count()).isEqualTo(0);
   }
 
   private void deleteS3Prefix(String bucket, String prefix) {
@@ -187,9 +189,9 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
         if (!keysToDelete.isEmpty()) {
           DeleteObjectsRequest deleteRequest = new DeleteObjectsRequest(bucket)
             .withKeys(keysToDelete);
-          client.deleteObjects(deleteRequest);
-          keysToDelete.forEach(k -> {
-            LOGGER.info("Deleting file {}", k.getKey());
+          var result = client.deleteObjects(deleteRequest);
+          result.getDeletedObjects().forEach(k -> {
+            LOGGER.info("Deleted file {}", k.getKey());
           });
         }
 
