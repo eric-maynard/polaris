@@ -27,15 +27,10 @@ import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.google.common.collect.ImmutableMap;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.rest.requests.ImmutableRegisterTableRequest;
 import org.apache.iceberg.rest.responses.LoadTableResponse;
 import org.apache.polaris.service.it.ext.PolarisSparkIntegrationTestBase;
@@ -186,17 +181,20 @@ public class PolarisSparkIntegrationTest extends PolarisSparkIntegrationTestBase
       var files = client.listObjects(bucket, prefix);
       while (true) {
         List<DeleteObjectsRequest.KeyVersion> keysToDelete =
-          files.getObjectSummaries().stream()
-            .map(o -> new DeleteObjectsRequest.KeyVersion(o.getKey()))
-            .collect(Collectors.toList());
+            files.getObjectSummaries().stream()
+                .map(o -> new DeleteObjectsRequest.KeyVersion(o.getKey()))
+                .collect(Collectors.toList());
 
         if (!keysToDelete.isEmpty()) {
-          DeleteObjectsRequest deleteRequest = new DeleteObjectsRequest(bucket)
-            .withKeys(keysToDelete);
+          DeleteObjectsRequest deleteRequest =
+              new DeleteObjectsRequest(bucket).withKeys(keysToDelete);
           var result = client.deleteObjects(deleteRequest);
-          result.getDeletedObjects().forEach(k -> {
-            LOGGER.info("Deleted file {}", k.getKey());
-          });
+          result
+              .getDeletedObjects()
+              .forEach(
+                  k -> {
+                    LOGGER.info("Deleted file {}", k.getKey());
+                  });
         }
 
         if (files.isTruncated()) {
