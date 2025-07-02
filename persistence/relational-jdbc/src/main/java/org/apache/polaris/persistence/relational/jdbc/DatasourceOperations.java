@@ -38,7 +38,6 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.polaris.core.persistence.EntityAlreadyExistsException;
@@ -84,15 +83,14 @@ public class DatasourceOperations {
    */
   public void executeScript(InputStream scriptInputStream) throws SQLException {
     try (BufferedReader scriptReader =
-             new BufferedReader(
-                 new InputStreamReader(Objects.requireNonNull(scriptInputStream), UTF_8))) {
+        new BufferedReader(
+            new InputStreamReader(Objects.requireNonNull(scriptInputStream), UTF_8))) {
       List<String> scriptLines = scriptReader.lines().toList();
       runWithinTransaction(
           connection -> {
-            try (Statement statement = connection.createStatement();
-                ) {
+            try (Statement statement = connection.createStatement(); ) {
               StringBuilder sqlBuffer = new StringBuilder();
-              for (String line: scriptLines) {
+              for (String line : scriptLines) {
                 line = line.trim();
                 if (!line.isEmpty() && !line.startsWith("--")) { // Ignore empty lines and comments
                   sqlBuffer.append(line).append("\n");
