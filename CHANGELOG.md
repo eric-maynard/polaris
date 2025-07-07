@@ -32,6 +32,7 @@ request adding CHANGELOG notes for breaking (!) changes and possibly other secti
 ### Upgrade notes
 
 ### Breaking changes
+1. The spark client bundle jar 
 
 ### New Features
 
