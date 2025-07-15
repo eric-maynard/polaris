@@ -98,8 +98,13 @@ import org.apache.polaris.service.catalog.SupportsNotifications;
 import org.apache.polaris.service.catalog.common.CatalogHandler;
 import org.apache.polaris.service.config.ReservedProperties;
 import org.apache.polaris.service.context.catalog.CallContextCatalogFactory;
+import org.apache.polaris.service.conversion.TableConversionUtils;
+import org.apache.polaris.service.conversion.TableConverter;
+import org.apache.polaris.service.conversion.TableConverterRegistry;
+import org.apache.polaris.service.conversion.TableFormat;
 import org.apache.polaris.service.http.IcebergHttpUtil;
 import org.apache.polaris.service.http.IfNoneMatch;
+import org.apache.polaris.service.types.GenericTable;
 import org.apache.polaris.service.types.NotificationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,8 +152,15 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
       String catalogName,
       PolarisAuthorizer authorizer,
       ReservedProperties reservedProperties,
-      CatalogHandlerUtils catalogHandlerUtils) {
-    super(callContext, entityManager, securityContext, catalogName, authorizer);
+      CatalogHandlerUtils catalogHandlerUtils,
+      TableConverterRegistry tableConverterRegistry) {
+    super(
+        callContext,
+        entityManager,
+        securityContext,
+        catalogName,
+        authorizer,
+        tableConverterRegistry);
     this.metaStoreManager = metaStoreManager;
     this.userSecretsManager = userSecretsManager;
     this.catalogFactory = catalogFactory;
@@ -607,6 +619,79 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
     return IcebergTableLikeEntity.of(target.getRawLeafEntity());
   }
 
+  private boolean shouldConvertOnRead() {
+    return callContext
+        .getPolarisCallContext()
+        .getRealmConfig()
+        .getConfig(FeatureConfiguration.TABLE_CONVERSION_CONVERT_ON_READ);
+  }
+
+  // TODO we should support overrides on a table / catalog level, but unclear
+  // TODO if this should wait for StorageConfigInfo on lower-level objects or not
+  private int conversionDefaultSla() {
+    return callContext
+        .getPolarisCallContext()
+        .getConfigurationStore()
+        .getConfiguration(
+            callContext.getRealmContext(),
+            FeatureConfiguration.TABLE_CONVERSION_DEFAULT_SLA_SECONDS);
+  }
+
+  /**
+   * If applicable, delegates loading the table to GenericTableCatalogHandler Note that this method
+   * needs to be called after auth checks
+   */
+  private Optional<LoadTableResponse> loadTableViaGenericTableIfApplicable(
+      TableIdentifier tableIdentifier) {
+    if (!shouldConvertOnRead()) {
+      return Optional.empty();
+    }
+
+    PolarisResolvedPathWrapper target = resolutionManifest.getResolvedPath(tableIdentifier);
+    IcebergTableLikeEntity tableLikeEntity = IcebergTableLikeEntity.of(target.getRawLeafEntity());
+
+    if (tableLikeEntity == null) {
+      return Optional.empty();
+    } else if (tableLikeEntity.getSubType() == PolarisEntitySubType.GENERIC_TABLE) {
+      TableConverter tableConverter = tableConverterRegistry.getConverter(TableFormat.ICEBERG);
+      if (tableConverter == null) {
+        return Optional.empty();
+      } else {
+        int conversionSla = conversionDefaultSla();
+        Optional<GenericTable> converted =
+            tableConverter.convert(
+                TableConversionUtils.buildGenericTableWrapperForIceberg(
+                    tableIdentifier.name(), tableLikeEntity.getMetadataLocation()),
+                TableFormat.ICEBERG,
+                Map.of(), // TODO figure out credentials
+                conversionSla);
+        if (converted.isEmpty()) {
+          return Optional.empty();
+        } else {
+          String icebergMetadataLocation =
+              converted
+                  .get()
+                  .getProperties()
+                  .getOrDefault(TableConversionUtils.PROPERTY_LOCATION, null);
+          if (icebergMetadataLocation == null) {
+            LOGGER.debug("Received a null metadata location after table conversion");
+            return Optional.empty();
+          } else {
+            if (baseCatalog instanceof IcebergCatalog icebergCatalog) {
+              TableMetadata tableMetadata = icebergCatalog.loadTableUnsafe(icebergMetadataLocation);
+              return Optional.of(
+                  LoadTableResponse.builder().withTableMetadata(tableMetadata).build());
+            } else {
+              return Optional.empty();
+            }
+          }
+        }
+      }
+    } else {
+      return Optional.empty();
+    }
+  }
+
   public LoadTableResponse loadTable(TableIdentifier tableIdentifier, String snapshots) {
     return loadTableIfStale(tableIdentifier, null, snapshots).get();
   }
@@ -624,8 +709,7 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
   public Optional<LoadTableResponse> loadTableIfStale(
       TableIdentifier tableIdentifier, IfNoneMatch ifNoneMatch, String snapshots) {
     PolarisAuthorizableOperation op = PolarisAuthorizableOperation.LOAD_TABLE;
-    authorizeBasicTableLikeOperationOrThrow(
-        op, PolarisEntitySubType.ICEBERG_TABLE, tableIdentifier);
+    authorizeBasicTableLikeOperationOrThrow(op, PolarisEntitySubType.ANY_SUBTYPE, tableIdentifier);
 
     if (ifNoneMatch != null) {
       // Perform freshness-aware table loading if caller specified ifNoneMatch.
@@ -647,8 +731,14 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
       }
     }
 
-    LoadTableResponse rawResponse = catalogHandlerUtils.loadTable(baseCatalog, tableIdentifier);
-    return Optional.of(filterResponseToSnapshots(rawResponse, snapshots));
+    Optional<LoadTableResponse> maybeConversionResponse =
+        loadTableViaGenericTableIfApplicable(tableIdentifier);
+    if (maybeConversionResponse.isPresent()) {
+      return maybeConversionResponse;
+    } else {
+      LoadTableResponse rawResponse = catalogHandlerUtils.loadTable(baseCatalog, tableIdentifier);
+      return Optional.of(filterResponseToSnapshots(rawResponse, snapshots));
+    }
   }
 
   public LoadTableResponse loadTableWithAccessDelegation(
@@ -735,6 +825,12 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
           return Optional.empty();
         }
       }
+    }
+
+    Optional<LoadTableResponse> maybeConversionResponse =
+        loadTableViaGenericTableIfApplicable(tableIdentifier);
+    if (maybeConversionResponse.isPresent()) {
+      return maybeConversionResponse;
     }
 
     // TODO: Find a way for the configuration or caller to better express whether to fail or omit

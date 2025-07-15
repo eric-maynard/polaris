@@ -53,6 +53,8 @@ dependencies {
     api(project(":polaris-runtime-service"))
     api(project(":polaris-runtime-spark-tests"))
 
+    api(project(":polaris-conversion-xtable"))
+
     api(project(":polaris-tests"))
   }
 }
