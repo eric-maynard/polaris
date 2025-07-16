@@ -32,6 +32,7 @@ request adding CHANGELOG notes for breaking (!) changes and possibly other secti
 ### Upgrade notes
 
 ### Breaking changes
+1. The spark client bundle jar 
 
 ### New Features
 
@@ -45,6 +46,8 @@ the authentication parameters are picked from the environment or configuration f
 at locations that better optimize for object storage.
 
 ### Changes
+
+- Polaris Management API clients must be prepared to deal with new attributes in `AwsStorageConfigInfo` objects.
 
 ### Deprecations
 
