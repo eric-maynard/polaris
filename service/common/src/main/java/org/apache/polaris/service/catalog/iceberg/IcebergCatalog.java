@@ -1273,7 +1273,10 @@ public class IcebergCatalog extends BaseMetastoreViewCatalog
             });
   }
 
-  /** Loads table metadata from a given metadata file using the FileIO directly. For internal use only. */
+  /**
+   * Loads table metadata from a given metadata file using the FileIO directly. For internal use
+   * only.
+   */
   public TableMetadata loadTableUnsafe(String metadataLocation) {
     if (this.catalogFileIO == null) {
       throw new IllegalStateException("Catalog was not properly initialized");

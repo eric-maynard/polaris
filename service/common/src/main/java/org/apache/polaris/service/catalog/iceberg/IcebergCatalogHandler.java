@@ -669,10 +669,7 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
         if (converted.isEmpty()) {
           return Optional.empty();
         } else {
-          String icebergMetadataLocation =
-              converted
-                  .get()
-                  .getBaseLocation();
+          String icebergMetadataLocation = converted.get().getBaseLocation();
           if (icebergMetadataLocation == null) {
             LOGGER.debug("Received a null metadata location after table conversion");
             return Optional.empty();

@@ -18,10 +18,7 @@
  */
 package org.apache.polaris.service.conversion;
 
-import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.iceberg.Table;
 import org.apache.polaris.service.types.GenericTable;
 
 /** A collection of utility member and methods related to table conversion. */
