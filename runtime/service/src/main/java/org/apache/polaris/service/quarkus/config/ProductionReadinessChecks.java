@@ -283,9 +283,9 @@ public class ProductionReadinessChecks {
   public ProductionReadinessCheck checkConverters(QuarkusTableConverterRegistry converterRegistry) {
     for (TableConverter converter : converterRegistry.getConverters()) {
       // TODO should we add a dependency on the extension here?
-      if (converter.getClass().getSimpleName().equals("XTableConverter")) {
+      if (converter.getClass().getSimpleName().contains("XTableConverter")) {
         return ProductionReadinessCheck.of(
-            Error.of("XTableConverter is not safe for produciton usage", "polaris.converters"));
+            Error.of("XTableConverter is not safe for production usage.", "polaris.converters"));
       }
     }
     return ProductionReadinessCheck.OK;
