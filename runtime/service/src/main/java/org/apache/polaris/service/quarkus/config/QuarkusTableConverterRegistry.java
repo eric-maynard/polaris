@@ -16,30 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.polaris.service.quarkus.config.conversion;
+package org.apache.polaris.service.quarkus.config;
 
 import io.smallrye.common.annotation.Identifier;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.polaris.service.conversion.NoneTableConverter;
 import org.apache.polaris.service.conversion.TableConverter;
 import org.apache.polaris.service.conversion.TableConverterRegistry;
 import org.apache.polaris.service.conversion.TableFormat;
-import org.jboss.resteasy.reactive.common.util.CaseInsensitiveMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class QuarkusTableConverterRegistry implements TableConverterRegistry {
-  Logger LOGGER = LoggerFactory.getLogger(QuarkusTableConverterRegistry.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(QuarkusTableConverterRegistry.class);
 
-  private final CaseInsensitiveMap<TableConverter> converterMap = new CaseInsensitiveMap<>();
+  private final Map<Pair<TableFormat, TableFormat>, TableConverter> converterMap = new HashMap<>();
+  private static final Pattern configPattern = Pattern.compile("(.+?).to.(.+?)");
 
   @Inject
   @Identifier("none")
@@ -66,16 +72,27 @@ public class QuarkusTableConverterRegistry implements TableConverterRegistry {
             (key, identifier) -> {
               TableConverter converter = beansById.get(identifier);
               if (converter != null) {
-                converterMap.put(key, List.of(converter));
+                converterMap.put(getTableFormats(key), converter);
               } else {
                 LOGGER.error("Unable to load converter: {}", identifier);
               }
             });
   }
 
-  /** Load the TableConverter for a format, case-insensitive */
+  private Pair<TableFormat, TableFormat> getTableFormats(String configEntry) {
+    Matcher matcher = configPattern.matcher(configEntry);
+    if (matcher.matches()) {
+      TableFormat sourceFormat = TableFormat.of(matcher.group(1));
+      TableFormat targetFormat = TableFormat.of(matcher.group(2));
+      return Pair.of(sourceFormat, targetFormat);
+    } else {
+      throw new IllegalArgumentException("Could not parse converter configuration: " + configEntry);
+    }
+  }
+
+  /** Load the TableConverter for a source/target format pair */
   @Override
-  public TableConverter getConverter(TableFormat format) {
-    return converterMap.getOrDefault(format.toString(), List.of(noneTableConverter)).getFirst();
+  public TableConverter getConverter(TableFormat sourceFormat, TableFormat targetFormat) {
+    return converterMap.getOrDefault(Pair.of(sourceFormat, targetFormat), noneTableConverter);
   }
 }

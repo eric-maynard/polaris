@@ -83,6 +83,7 @@ import org.apache.polaris.core.connection.iceberg.IcebergRestConnectionConfigInf
 import org.apache.polaris.core.context.CallContext;
 import org.apache.polaris.core.entity.CatalogEntity;
 import org.apache.polaris.core.entity.PolarisEntitySubType;
+import org.apache.polaris.core.entity.table.GenericTableEntity;
 import org.apache.polaris.core.entity.table.IcebergTableLikeEntity;
 import org.apache.polaris.core.persistence.PolarisEntityManager;
 import org.apache.polaris.core.persistence.PolarisMetaStoreManager;
@@ -630,11 +631,8 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
   // TODO if this should wait for StorageConfigInfo on lower-level objects or not
   private int conversionDefaultSla() {
     return callContext
-        .getPolarisCallContext()
-        .getConfigurationStore()
-        .getConfiguration(
-            callContext.getRealmContext(),
-            FeatureConfiguration.TABLE_CONVERSION_DEFAULT_SLA_SECONDS);
+        .getRealmConfig()
+        .getConfig(FeatureConfiguration.TABLE_CONVERSION_DEFAULT_SLA_SECONDS);
   }
 
   /**
@@ -653,7 +651,8 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
     if (tableLikeEntity == null) {
       return Optional.empty();
     } else if (tableLikeEntity.getSubType() == PolarisEntitySubType.GENERIC_TABLE) {
-      TableConverter tableConverter = tableConverterRegistry.getConverter(TableFormat.ICEBERG);
+      TableFormat sourceFormat = TableFormat.of(new GenericTableEntity(tableLikeEntity).getFormat());
+      TableConverter tableConverter = tableConverterRegistry.getConverter(sourceFormat, TableFormat.ICEBERG);
       if (tableConverter == null) {
         return Optional.empty();
       } else {

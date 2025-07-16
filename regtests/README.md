@@ -198,7 +198,7 @@ Tests rely on Python 3.9 or higher. `pyenv` can be used to install a current ver
 by using
 
 ```shell
-pyenv install 3.9
+pyenv install 3.9xf
 pyenv local 3.9
 ```
 

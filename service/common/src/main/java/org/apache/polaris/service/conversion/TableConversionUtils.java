@@ -34,6 +34,7 @@ public class TableConversionUtils {
     return new GenericTable(
         icebergTable.name(),
         TableFormat.ICEBERG.toString(),
+        icebergTable.location(),
         "Iceberg table " + icebergTable.name(),
         properties);
   }
@@ -43,6 +44,10 @@ public class TableConversionUtils {
     HashMap<String, String> properties = new HashMap<>();
     properties.put(PROPERTY_LOCATION, metadataLocation);
     return new GenericTable(
-        tableName, TableFormat.ICEBERG.toString(), "Iceberg table " + tableName, properties);
+        tableName,
+        TableFormat.ICEBERG.toString(),
+        metadataLocation,
+        "Iceberg table " + tableName,
+        properties);
   }
 }

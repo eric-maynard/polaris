@@ -19,5 +19,5 @@
 package org.apache.polaris.service.conversion;
 
 public interface TableConverterRegistry {
-  TableConverter getConverter(TableFormat format);
+  TableConverter getConverter(TableFormat sourceFormat, TableFormat targetFormat);
 }

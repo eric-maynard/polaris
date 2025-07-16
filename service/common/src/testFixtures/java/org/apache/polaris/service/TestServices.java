@@ -190,7 +190,7 @@ public record TestServices(
       TableConverterRegistry tableConverterRegistry =
           new TableConverterRegistry() {
             @Override
-            public TableConverter getConverter(TableFormat format) {
+            public TableConverter getConverter(TableFormat sourceFormat, TableFormat targetFormat) {
               return null;
             }
           };

@@ -19,19 +19,55 @@
 
 package org.apache.polaris.service.conversion;
 
-public enum TableFormat {
-  ICEBERG("iceberg"),
-  DELTA("delta"),
-  HUDI("hudi");
+import java.util.Locale;
+import java.util.Map;
 
-  private final String format;
+public final class TableFormat {
+  public static final TableFormat ICEBERG = new TableFormat("iceberg");
+  public static final TableFormat DELTA = new TableFormat("delta");
+  public static final TableFormat HUDI = new TableFormat("hudi");
 
-  TableFormat(String format) {
-    this.format = format;
+  private static final Map<String, TableFormat> KNOWN_FORMATS = Map.of(
+      ICEBERG.getValue(), ICEBERG,
+      DELTA.getValue(), DELTA,
+      HUDI.getValue(), HUDI
+  );
+
+  private final String value;
+
+  private TableFormat(String value) {
+    this.value = value;
+  }
+
+  public static TableFormat of(String input) {
+    TableFormat known = KNOWN_FORMATS.get(input.toLowerCase(Locale.ROOT));
+    if (known != null) {
+      return known;
+    } else {
+      return new TableFormat(input.toLowerCase(Locale.ROOT));
+    }
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof TableFormat that)) {
+      return false;
+    } else {
+      return value.equalsIgnoreCase(that.value);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return value.toLowerCase(Locale.ROOT).hashCode();
   }
 
   @Override
   public String toString() {
-    return format;
+    return value;
   }
 }
