@@ -19,6 +19,8 @@
 package org.apache.polaris.service.conversion;
 
 import java.util.Map;
+
+import org.apache.polaris.core.entity.table.GenericTableEntity;
 import org.apache.polaris.service.types.GenericTable;
 
 /** A collection of utility member and methods related to table conversion. */
@@ -31,5 +33,14 @@ public class TableConversionUtils {
         metadataLocation,
         "Generic table " + tableName,
         Map.of());
+  }
+
+  public static GenericTable fromEntity(GenericTableEntity tableEntity) {
+    return new GenericTable(
+        tableEntity.getName(),
+        tableEntity.getFormat(),
+        tableEntity.getBaseLocation(),
+        tableEntity.getDoc(),
+        tableEntity.getPropertiesAsMap());
   }
 }

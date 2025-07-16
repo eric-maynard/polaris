@@ -661,8 +661,7 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
         int conversionSla = conversionDefaultSla();
         Optional<GenericTable> converted =
             tableConverter.convert(
-                TableConversionUtils.buildGenericTableWrapperForIceberg(
-                    tableIdentifier.name(), genericTableEntity.getBaseLocation()),
+                TableConversionUtils.fromEntity(genericTableEntity),
                 TableFormat.ICEBERG,
                 Map.of(),
                 conversionSla);

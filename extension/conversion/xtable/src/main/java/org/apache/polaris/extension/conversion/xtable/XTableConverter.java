@@ -75,7 +75,7 @@ public class XTableConverter implements TableConverter {
     // TODO remove debug printlns
     System.out.println("#### Attempting to convert: " + table);
     System.out.println("Target format: " + targetFormat);
-    String targetLocation = table.getBaseLocation() + "/_" + targetFormat.toString();
+    String targetLocation = table.getBaseLocation() + "_" + targetFormat.toString();
     try {
       SourceTable sourceTable =
           new SourceTable(
@@ -117,7 +117,11 @@ public class XTableConverter implements TableConverter {
       }
 
       provider.init(hadoopConfiguration);
-      conversionController.sync(conversionConfig, provider);
+      var commits = conversionController.sync(conversionConfig, provider);
+      System.out.println("#### Commits: ");
+      for (var entry : commits.entrySet()) {
+        System.out.println("  #### " + entry.getKey() + " -> " + entry.getValue());
+      }
 
       return Optional.of(
           new GenericTable(
