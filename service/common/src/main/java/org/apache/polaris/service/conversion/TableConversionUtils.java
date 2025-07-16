@@ -19,35 +19,20 @@
 package org.apache.polaris.service.conversion;
 
 import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.iceberg.Table;
 import org.apache.polaris.service.types.GenericTable;
 
 /** A collection of utility member and methods related to table conversion. */
 public class TableConversionUtils {
-
-  public static String PROPERTY_LOCATION = "location";
-
-  public static GenericTable convertToGenericTable(Table icebergTable) {
-    HashMap<String, String> properties = new HashMap<>(icebergTable.properties());
-    properties.put(PROPERTY_LOCATION, icebergTable.location());
-
-    return new GenericTable(
-        icebergTable.name(),
-        TableFormat.ICEBERG.toString(),
-        icebergTable.location(),
-        "Iceberg table " + icebergTable.name(),
-        properties);
-  }
-
   public static GenericTable buildGenericTableWrapperForIceberg(
       String tableName, String metadataLocation) {
-    HashMap<String, String> properties = new HashMap<>();
-    properties.put(PROPERTY_LOCATION, metadataLocation);
     return new GenericTable(
         tableName,
         TableFormat.ICEBERG.toString(),
         metadataLocation,
         "Iceberg table " + tableName,
-        properties);
+        Map.of());
   }
 }
