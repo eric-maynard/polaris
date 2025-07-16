@@ -58,12 +58,22 @@ public class XTableConverter implements TableConverter {
   private final Configuration hadoopConfiguration;
 
   public XTableConverter() {
-    this(new Configuration());
+    this(null);
   }
 
   public XTableConverter(Configuration configuration) {
-    hadoopConfiguration = configuration;
+    if (configuration == null) {
+      hadoopConfiguration = newLocalSparkConfiguration();
+    } else {
+      hadoopConfiguration = configuration;
+    }
     conversionController = new ConversionController(hadoopConfiguration);
+  }
+
+  private Configuration newLocalSparkConfiguration() {
+    Configuration configuration = new Configuration();
+    configuration.set("spark.master", "local[*]");
+    return configuration;
   }
 
   @Override

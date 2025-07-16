@@ -23,10 +23,10 @@ plugins {
 }
 
 val sparkMajorVersion = "3.5"
-val scalaVersion = "2.12"
+val scalaVersion = "2.13"
 val icebergVersion = pluginlibs.versions.iceberg.get()
 val spark35Version = pluginlibs.versions.spark35.get()
-val scalaLibraryVersion = "2.12.15"
+val scalaLibraryVersion = "2.13.16"
 
 dependencies {
   implementation(project(":polaris-core"))
@@ -34,13 +34,23 @@ dependencies {
   implementation(project(":polaris-api-catalog-service"))
 
   implementation(libs.slf4j.api)
+  implementation(platform("org.apache.logging.log4j:log4j-bom:2.24.3"))
 
   // XTable core
-  implementation("org.apache.xtable:xtable-core_2.12:0.3.0-incubating")
+  implementation("org.apache.xtable:xtable-core_2.12:0.3.0-incubating") {
+    exclude("log4j", "log4j")
+    exclude("org.apache.logging.log4j", "log4j-slf4j2-impl")
+    exclude("org.apache.logging.log4j", "log4j-1.2-api")
+    exclude("org.apache.logging.log4j", "log4j-core")
+    exclude("org.slf4j", "jul-to-slf4j")
+  }
 
   // Required for Delta source support
-  implementation("org.scala-lang:scala-library:${scalaLibraryVersion}")
-  //
+  implementation("org.scala-lang:scala-library") {
+    version {
+      strictly(scalaLibraryVersion)
+    }
+  }
   // implementation("org.apache.iceberg:iceberg-spark-runtime-3.5_${scalaVersion}:${icebergVersion}")
   implementation("org.apache.spark:spark-sql_${scalaVersion}:${spark35Version}") {
     // exclude log4j dependencies. Explicit dependencies for the log4j libraries are
@@ -51,9 +61,17 @@ dependencies {
     exclude("org.slf4j", "jul-to-slf4j")
   }
   implementation("io.delta:delta-spark_${scalaVersion}:3.3.1")
+//
+//  // Re-add log4j
+  implementation("org.apache.logging.log4j:log4j-api")
+  implementation("org.apache.logging.log4j:log4j-core")
+  implementation("org.apache.logging.log4j:log4j-slf4j2-impl")
+
 
   // Hadoop
-  implementation("org.apache.hadoop:hadoop-common:3.3.6")
+  implementation("org.apache.hadoop:hadoop-common:3.3.6") {
+    exclude("log4j", "log4j")
+  }
 
   // Quarkus + Compile-only dependencies
   compileOnly(libs.jakarta.annotation.api)
