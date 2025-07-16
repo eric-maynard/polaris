@@ -99,6 +99,7 @@ public class PolarisGenericTableCatalog implements GenericTableCatalog {
             resolvedEntities == null ? null : resolvedEntities.getRawLeafEntity());
     if (null == entity) {
       entity =
+
           new GenericTableEntity.Builder(tableIdentifier, format)
               .setCatalogId(this.catalogId)
               .setParentNamespace(tableIdentifier.namespace())
