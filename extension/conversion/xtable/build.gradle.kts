@@ -40,7 +40,8 @@ dependencies {
 
   // Required for Delta source support
   implementation("org.scala-lang:scala-library:${scalaLibraryVersion}")
-//  implementation("org.apache.iceberg:iceberg-spark-runtime-3.5_${scalaVersion}:${icebergVersion}")
+  //
+  // implementation("org.apache.iceberg:iceberg-spark-runtime-3.5_${scalaVersion}:${icebergVersion}")
   implementation("org.apache.spark:spark-sql_${scalaVersion}:${spark35Version}") {
     // exclude log4j dependencies. Explicit dependencies for the log4j libraries are
     // enforced below to ensure the version compatibility
@@ -67,4 +68,3 @@ dependencies {
 }
 
 description = "Implements table conversion via XTable"
-
