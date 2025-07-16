@@ -20,17 +20,30 @@ package org.apache.polaris.extension.conversion.xtable;
 
 import io.smallrye.common.annotation.Identifier;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.polaris.service.conversion.TableConverter;
 import org.apache.polaris.service.conversion.TableFormat;
 import org.apache.polaris.service.types.GenericTable;
+import org.apache.xtable.conversion.ConversionConfig;
 import org.apache.xtable.conversion.ConversionController;
+import org.apache.xtable.conversion.SourceTable;
+import org.apache.xtable.conversion.TargetTable;
+import org.apache.xtable.model.sync.SyncMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * A {@link TableConverter} implementation that uses XTable to convert a table locally.
+ * Since conversion happens within the JVM, this should only be used for testing.
+ */
 @ApplicationScoped
 @Identifier("xtable")
 public class XTableConverter implements TableConverter {
+  private static final Logger LOGGER = LoggerFactory.getLogger(XTableConverter.class);
 
   private final ConversionController conversionController;
 
@@ -42,42 +55,56 @@ public class XTableConverter implements TableConverter {
     conversionController = new ConversionController(configuration);
   }
 
-  // TODO convert locally
   @Override
   public Optional<GenericTable> convert(
       GenericTable table,
       TableFormat targetFormat,
       Map<String, String> storageCredentials,
       int requestedFreshnessSeconds) {
-    // TODO fix pseudocode:
-    //    SourceTable sourceTable =
-    //        new SourceTable(
-    //            table.getName(),
-    //            table.getFormat(),
-    //            table.getBaseLocation(),
-    //            /* dataPath= */ null,
-    //            /* namespace= */ null,
-    //            /* catalogConfig= */ null,
-    //            new Properties());
-    //
-    //    TargetTable targetTable =
-    //        new TargetTable(
-    //            table.getName(),
-    //            targetFormat.toString(),
-    //            table.getBaseLocation(),
-    //            /* dataPath= */ null,
-    //            /* namespace= */ null,
-    //            /* catalogConfig= */ null,
-    //            new Properties());
-    //
-    //    ConversionConfig conversionConfig =
-    //        ConversionConfig.builder()
-    //            .sourceTable(sourceTable)
-    //            .targetTables(List.of(targetTable))
-    //            .syncMode(SyncMode.FULL)
-    //            .build();
+    // TODO remove debug printlns
+    String targetLocation = table.getBaseLocation() + "/_" + targetFormat.toString();
+    try {
+      System.out.println("#### Attempting to convert: " + table);
+      SourceTable sourceTable =
+          new SourceTable(
+              table.getName(),
+              table.getFormat(),
+              table.getBaseLocation(),
+              /* namespace= */ null,
+              /* catalogConfig= */ null,
+              /* metadataRetention= */ null,
+              new Properties());
 
-    //    conversionController.sync(conversionConfig, /* conversionSourceProvider= */ null);
-    return Optional.empty();
+      TargetTable targetTable =
+          new TargetTable(
+              table.getName(),
+              targetFormat.toString(),
+              targetLocation,
+              /* namespace= */ null,
+              /* catalogConfig= */ null,
+              /* metadataRetention= */ null,
+              new Properties());
+
+      ConversionConfig conversionConfig =
+          ConversionConfig.builder()
+              .sourceTable(sourceTable)
+              .targetTables(List.of(targetTable))
+              .syncMode(SyncMode.FULL)
+              .build();
+
+      conversionController.sync(conversionConfig, /* conversionSourceProvider= */ null);
+
+      return Optional.of(new GenericTable(
+          table.getName(),
+          targetFormat.toString(),
+          targetLocation,
+          table.getDoc() + String.format(" (Converted via XTable to %s)", targetFormat),
+          table.getProperties()
+      ));
+    } catch (RuntimeException e) {
+      LOGGER.info("Encountered an error during table conversion: " + e.getMessage());
+      throw e;
+      // return Optional.empty();
+    }
   }
 }

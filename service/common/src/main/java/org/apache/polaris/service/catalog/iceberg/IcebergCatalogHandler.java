@@ -655,7 +655,7 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
           TableFormat.of(new GenericTableEntity(tableLikeEntity).getFormat());
       TableConverter tableConverter =
           tableConverterRegistry.getConverter(sourceFormat, TableFormat.ICEBERG);
-      if (tableConverter == null) {
+      if (tableConverter == null || tableLikeEntity.getBaseLocation() == null) {
         return Optional.empty();
       } else {
         int conversionSla = conversionDefaultSla();
@@ -664,7 +664,7 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
                 TableConversionUtils.buildGenericTableWrapperForIceberg(
                     tableIdentifier.name(), tableLikeEntity.getMetadataLocation()),
                 TableFormat.ICEBERG,
-                Map.of(), // TODO figure out credentials
+                Map.of(),
                 conversionSla);
         if (converted.isEmpty()) {
           return Optional.empty();
