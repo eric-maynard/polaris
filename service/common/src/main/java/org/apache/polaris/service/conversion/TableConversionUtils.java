@@ -29,7 +29,7 @@ public class TableConversionUtils {
         tableName,
         TableFormat.ICEBERG.toString(),
         metadataLocation,
-        "Iceberg table " + tableName,
+        "Generic table " + tableName,
         Map.of());
   }
 }

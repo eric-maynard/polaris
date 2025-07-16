@@ -42,6 +42,7 @@ import org.apache.polaris.service.config.FeaturesConfiguration;
 import org.apache.polaris.service.context.DefaultRealmContextResolver;
 import org.apache.polaris.service.context.RealmContextResolver;
 import org.apache.polaris.service.context.TestRealmContextResolver;
+import org.apache.polaris.service.conversion.TableConverter;
 import org.apache.polaris.service.events.PolarisEventListener;
 import org.apache.polaris.service.events.TestPolarisEventListener;
 import org.apache.polaris.service.persistence.InMemoryPolarisMetaStoreManagerFactory;
@@ -276,5 +277,17 @@ public class ProductionReadinessChecks {
     return errors.isEmpty()
         ? ProductionReadinessCheck.OK
         : ProductionReadinessCheck.of(errors.toArray(new Error[0]));
+  }
+
+  @Produces
+  public ProductionReadinessCheck checkConverters(QuarkusTableConverterRegistry converterRegistry) {
+    for (TableConverter converter : converterRegistry.getConverters()) {
+      // TODO should we add a dependency on the extension here?
+      if (converter.getClass().getSimpleName().equals("XTableConverter")) {
+        return ProductionReadinessCheck.of(
+            Error.of("XTableConverter is not safe for produciton usage", "polaris.converters"));
+      }
+    }
+    return ProductionReadinessCheck.OK;
   }
 }

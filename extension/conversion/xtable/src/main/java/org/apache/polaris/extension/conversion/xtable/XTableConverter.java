@@ -25,20 +25,29 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.iceberg.TableMetadata;
+import org.apache.iceberg.TableMetadataParser;
+import org.apache.iceberg.hadoop.HadoopFileIO;
+import org.apache.iceberg.io.FileIO;
 import org.apache.polaris.service.conversion.TableConverter;
 import org.apache.polaris.service.conversion.TableFormat;
 import org.apache.polaris.service.types.GenericTable;
 import org.apache.xtable.conversion.ConversionConfig;
 import org.apache.xtable.conversion.ConversionController;
+import org.apache.xtable.conversion.ConversionSourceProvider;
 import org.apache.xtable.conversion.SourceTable;
 import org.apache.xtable.conversion.TargetTable;
+import org.apache.xtable.delta.DeltaConversionSourceProvider;
+import org.apache.xtable.hudi.HudiConversionSourceProvider;
+import org.apache.xtable.iceberg.IcebergConversionSourceProvider;
 import org.apache.xtable.model.sync.SyncMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A {@link TableConverter} implementation that uses XTable to convert a table locally. Since
- * conversion happens within the JVM, this should only be used for testing.
+ * conversion happens within the JVM, this should only be used for testing. Simply uses a
+ * default Hadoop Configuration for File IO.
  */
 @ApplicationScoped
 @Identifier("xtable")
@@ -46,13 +55,15 @@ public class XTableConverter implements TableConverter {
   private static final Logger LOGGER = LoggerFactory.getLogger(XTableConverter.class);
 
   private final ConversionController conversionController;
+  private final Configuration hadoopConfiguration;
 
   public XTableConverter() {
     this(new Configuration());
   }
 
   public XTableConverter(Configuration configuration) {
-    conversionController = new ConversionController(configuration);
+    hadoopConfiguration = configuration;
+    conversionController = new ConversionController(hadoopConfiguration);
   }
 
   @Override
@@ -62,9 +73,10 @@ public class XTableConverter implements TableConverter {
       Map<String, String> storageCredentials,
       int requestedFreshnessSeconds) {
     // TODO remove debug printlns
+    System.out.println("#### Attempting to convert: " + table);
+    System.out.println("Target format: " + targetFormat);
     String targetLocation = table.getBaseLocation() + "/_" + targetFormat.toString();
     try {
-      System.out.println("#### Attempting to convert: " + table);
       SourceTable sourceTable =
           new SourceTable(
               table.getName(),
@@ -92,7 +104,20 @@ public class XTableConverter implements TableConverter {
               .syncMode(SyncMode.FULL)
               .build();
 
-      conversionController.sync(conversionConfig, /* conversionSourceProvider= */ null);
+      final ConversionSourceProvider<?> provider;
+      if (table.getFormat().equals(TableFormat.ICEBERG.getValue())) {
+        provider = new IcebergConversionSourceProvider();
+      } else if (table.getFormat().equals(TableFormat.DELTA.getValue())) {
+        provider = new DeltaConversionSourceProvider();
+      } else if (table.getFormat().equals(TableFormat.HUDI.getValue())) {
+        provider = new HudiConversionSourceProvider();
+      } else {
+        LOGGER.debug("Xtable cannot convert from source format: {}", table.getFormat());
+        return Optional.empty();
+      }
+
+      provider.init(hadoopConfiguration);
+      conversionController.sync(conversionConfig, provider);
 
       return Optional.of(
           new GenericTable(
@@ -103,8 +128,15 @@ public class XTableConverter implements TableConverter {
               table.getProperties()));
     } catch (RuntimeException e) {
       LOGGER.info("Encountered an error during table conversion: " + e.getMessage());
-      throw e;
-      // return Optional.empty();
+      return Optional.empty();
+    }
+  }
+
+  /** Load Iceberg metadata directly using the HadoopFileIO */
+  @Override
+  public Optional<TableMetadata> loadIcebergTable(String icebergLocation) {
+    try (FileIO fileIO = new HadoopFileIO(hadoopConfiguration)) {
+      return Optional.of(TableMetadataParser.read(fileIO, icebergLocation));
     }
   }
 }

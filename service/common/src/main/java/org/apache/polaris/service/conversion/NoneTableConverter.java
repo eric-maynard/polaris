@@ -22,6 +22,8 @@ import io.smallrye.common.annotation.Identifier;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.iceberg.TableMetadata;
 import org.apache.polaris.service.types.GenericTable;
 
 @ApplicationScoped
@@ -35,5 +37,10 @@ public class NoneTableConverter implements TableConverter {
       Map<String, String> storageCredentials,
       int requestedFreshnessSeconds) {
     return Optional.empty();
+  }
+
+  @Override
+  public Optional<TableMetadata> loadIcebergTable(String icebergLocation) {
+    throw new IllegalStateException("NONE converter shouldn't be used to load Iceberg data");
   }
 }

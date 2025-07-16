@@ -651,36 +651,32 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
     if (tableLikeEntity == null) {
       return Optional.empty();
     } else if (tableLikeEntity.getSubType() == PolarisEntitySubType.GENERIC_TABLE) {
-      TableFormat sourceFormat =
-          TableFormat.of(new GenericTableEntity(tableLikeEntity).getFormat());
+      GenericTableEntity genericTableEntity = new GenericTableEntity(tableLikeEntity);
+      TableFormat sourceFormat = TableFormat.of(genericTableEntity.getFormat());
       TableConverter tableConverter =
           tableConverterRegistry.getConverter(sourceFormat, TableFormat.ICEBERG);
-      if (tableConverter == null || tableLikeEntity.getBaseLocation() == null) {
+      if (tableConverter == null || genericTableEntity.getBaseLocation() == null) {
         return Optional.empty();
       } else {
         int conversionSla = conversionDefaultSla();
         Optional<GenericTable> converted =
             tableConverter.convert(
                 TableConversionUtils.buildGenericTableWrapperForIceberg(
-                    tableIdentifier.name(), tableLikeEntity.getMetadataLocation()),
+                    tableIdentifier.name(), genericTableEntity.getBaseLocation()),
                 TableFormat.ICEBERG,
                 Map.of(),
                 conversionSla);
+        System.out.println("#### Converted table into " + converted);
         if (converted.isEmpty()) {
           return Optional.empty();
         } else {
-          String icebergMetadataLocation = converted.get().getBaseLocation();
-          if (icebergMetadataLocation == null) {
+          String icebergLocation = converted.get().getBaseLocation();
+          if (icebergLocation == null) {
             LOGGER.debug("Received a null metadata location after table conversion");
             return Optional.empty();
           } else {
-            if (baseCatalog instanceof IcebergCatalog icebergCatalog) {
-              TableMetadata tableMetadata = icebergCatalog.loadTableUnsafe(icebergMetadataLocation);
-              return Optional.of(
-                  LoadTableResponse.builder().withTableMetadata(tableMetadata).build());
-            } else {
-              return Optional.empty();
-            }
+            Optional<TableMetadata> tableMetadata = tableConverter.loadIcebergTable(icebergLocation);
+            return tableMetadata.map(m -> LoadTableResponse.builder().withTableMetadata(m).build());
           }
         }
       }

@@ -24,7 +24,10 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,5 +94,10 @@ public class QuarkusTableConverterRegistry implements TableConverterRegistry {
   @Override
   public TableConverter getConverter(TableFormat sourceFormat, TableFormat targetFormat) {
     return converterMap.getOrDefault(Pair.of(sourceFormat, targetFormat), noneTableConverter);
+  }
+
+  /** Return all registered converters */
+  public Set<TableConverter> getConverters() {
+    return new HashSet<>(converterMap.values());
   }
 }

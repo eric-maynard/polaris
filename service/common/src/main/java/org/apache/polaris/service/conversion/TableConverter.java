@@ -20,6 +20,8 @@ package org.apache.polaris.service.conversion;
 
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.iceberg.TableMetadata;
 import org.apache.polaris.service.types.GenericTable;
 
 /** Implementations are used to convert from one table format to another. */
@@ -52,4 +54,7 @@ public interface TableConverter {
       GenericTable table, TableFormat targetFormat, Map<String, String> storageCredentials) {
     return convert(table, targetFormat, storageCredentials, 0);
   }
+
+  /** Loads Iceberg metadata from a given location */
+  Optional<TableMetadata> loadIcebergTable(String icebergLocation);
 }
