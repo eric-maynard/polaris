@@ -651,8 +651,10 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
     if (tableLikeEntity == null) {
       return Optional.empty();
     } else if (tableLikeEntity.getSubType() == PolarisEntitySubType.GENERIC_TABLE) {
-      TableFormat sourceFormat = TableFormat.of(new GenericTableEntity(tableLikeEntity).getFormat());
-      TableConverter tableConverter = tableConverterRegistry.getConverter(sourceFormat, TableFormat.ICEBERG);
+      TableFormat sourceFormat =
+          TableFormat.of(new GenericTableEntity(tableLikeEntity).getFormat());
+      TableConverter tableConverter =
+          tableConverterRegistry.getConverter(sourceFormat, TableFormat.ICEBERG);
       if (tableConverter == null) {
         return Optional.empty();
       } else {

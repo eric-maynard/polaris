@@ -27,11 +27,11 @@ public final class TableFormat {
   public static final TableFormat DELTA = new TableFormat("delta");
   public static final TableFormat HUDI = new TableFormat("hudi");
 
-  private static final Map<String, TableFormat> KNOWN_FORMATS = Map.of(
-      ICEBERG.getValue(), ICEBERG,
-      DELTA.getValue(), DELTA,
-      HUDI.getValue(), HUDI
-  );
+  private static final Map<String, TableFormat> KNOWN_FORMATS =
+      Map.of(
+          ICEBERG.getValue(), ICEBERG,
+          DELTA.getValue(), DELTA,
+          HUDI.getValue(), HUDI);
 
   private final String value;
 
