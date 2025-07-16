@@ -19,7 +19,6 @@
 package org.apache.polaris.service.conversion;
 
 import java.util.Map;
-
 import org.apache.polaris.core.entity.table.GenericTableEntity;
 import org.apache.polaris.service.types.GenericTable;
 

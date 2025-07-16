@@ -46,8 +46,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A {@link TableConverter} implementation that uses XTable to convert a table locally. Since
- * conversion happens within the JVM, this should only be used for testing. Simply uses a
- * default Hadoop Configuration for File IO.
+ * conversion happens within the JVM, this should only be used for testing. Simply uses a default
+ * Hadoop Configuration for File IO.
  */
 @ApplicationScoped
 @Identifier("xtable")

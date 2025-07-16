@@ -20,7 +20,6 @@ package org.apache.polaris.service.conversion;
 
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.iceberg.TableMetadata;
 import org.apache.polaris.service.types.GenericTable;
 

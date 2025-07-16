@@ -22,7 +22,6 @@ import io.smallrye.common.annotation.Identifier;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.iceberg.TableMetadata;
 import org.apache.polaris.service.types.GenericTable;
 

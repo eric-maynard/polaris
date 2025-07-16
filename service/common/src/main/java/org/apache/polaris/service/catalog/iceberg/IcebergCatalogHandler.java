@@ -674,7 +674,8 @@ public class IcebergCatalogHandler extends CatalogHandler implements AutoCloseab
             LOGGER.debug("Received a null metadata location after table conversion");
             return Optional.empty();
           } else {
-            Optional<TableMetadata> tableMetadata = tableConverter.loadIcebergTable(icebergLocation);
+            Optional<TableMetadata> tableMetadata =
+                tableConverter.loadIcebergTable(icebergLocation);
             return tableMetadata.map(m -> LoadTableResponse.builder().withTableMetadata(m).build());
           }
         }
