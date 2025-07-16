@@ -37,8 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link TableConverter} implementation that uses XTable to convert a table locally.
- * Since conversion happens within the JVM, this should only be used for testing.
+ * A {@link TableConverter} implementation that uses XTable to convert a table locally. Since
+ * conversion happens within the JVM, this should only be used for testing.
  */
 @ApplicationScoped
 @Identifier("xtable")
@@ -94,13 +94,13 @@ public class XTableConverter implements TableConverter {
 
       conversionController.sync(conversionConfig, /* conversionSourceProvider= */ null);
 
-      return Optional.of(new GenericTable(
-          table.getName(),
-          targetFormat.toString(),
-          targetLocation,
-          table.getDoc() + String.format(" (Converted via XTable to %s)", targetFormat),
-          table.getProperties()
-      ));
+      return Optional.of(
+          new GenericTable(
+              table.getName(),
+              targetFormat.toString(),
+              targetLocation,
+              table.getDoc() + String.format(" (Converted via XTable to %s)", targetFormat),
+              table.getProperties()));
     } catch (RuntimeException e) {
       LOGGER.info("Encountered an error during table conversion: " + e.getMessage());
       throw e;
