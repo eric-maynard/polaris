@@ -29,6 +29,13 @@ val spark35Version = pluginlibs.versions.spark35.get()
 val scalaLibraryVersion = "2.13.16"
 
 dependencies {
+  // must be enforced to get a consistent and validated set of dependencies
+  implementation(enforcedPlatform(libs.quarkus.bom)) {
+    exclude(group = "org.antlr", module = "antlr4-runtime")
+    exclude(group = "org.scala-lang", module = "scala-library")
+    exclude(group = "org.scala-lang", module = "scala-reflect")
+  }
+
   implementation(project(":polaris-core"))
   implementation(project(":polaris-service-common"))
   implementation(project(":polaris-api-catalog-service"))
@@ -63,6 +70,8 @@ dependencies {
     exclude("org.slf4j", "jul-to-slf4j")
   }
   implementation("io.delta:delta-spark_${scalaVersion}:3.3.1")
+//  implementation(libs.javax.servlet.api)
+//  implementation(libs.antlr4.runtime)
 
   // Re-add log4j
   implementation("org.apache.logging.log4j:log4j-api")
