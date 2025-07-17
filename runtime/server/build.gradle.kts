@@ -74,13 +74,19 @@ quarkus {
 
 tasks.register("run") { dependsOn("quarkusRun") }
 
-val sparkJvmArgs = listOf(
-  "--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED",
-  "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-  "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
-  "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
-  "--add-opens", "java.base/java.util=ALL-UNNAMED"
-)
+val sparkJvmArgs =
+  listOf(
+    "--add-exports",
+    "java.base/sun.nio.ch=ALL-UNNAMED",
+    "--add-opens",
+    "java.base/java.nio=ALL-UNNAMED",
+    "--add-opens",
+    "java.base/java.lang.invoke=ALL-UNNAMED",
+    "--add-opens",
+    "java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens",
+    "java.base/java.util=ALL-UNNAMED",
+  )
 
 tasks.named<QuarkusRun>("quarkusRun") {
   jvmArgs =

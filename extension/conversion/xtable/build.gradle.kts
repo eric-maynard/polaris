@@ -55,11 +55,7 @@ dependencies {
   }
 
   // Required for Delta source support
-  implementation("org.scala-lang:scala-library") {
-    version {
-      strictly(scalaLibraryVersion)
-    }
-  }
+  implementation("org.scala-lang:scala-library") { version { strictly(scalaLibraryVersion) } }
   // implementation("org.apache.iceberg:iceberg-spark-runtime-3.5_${scalaVersion}:${icebergVersion}")
   implementation("org.apache.spark:spark-sql_${scalaVersion}:${spark35Version}") {
     // exclude log4j dependencies. Explicit dependencies for the log4j libraries are
@@ -70,19 +66,16 @@ dependencies {
     exclude("org.slf4j", "jul-to-slf4j")
   }
   implementation("io.delta:delta-spark_${scalaVersion}:3.3.1")
-//  implementation(libs.javax.servlet.api)
-//  implementation(libs.antlr4.runtime)
+  //  implementation(libs.javax.servlet.api)
+  //  implementation(libs.antlr4.runtime)
 
   // Re-add log4j
   implementation("org.apache.logging.log4j:log4j-api")
   implementation("org.apache.logging.log4j:log4j-core")
   implementation("org.apache.logging.log4j:log4j-slf4j2-impl")
 
-
   // Hadoop
-  implementation("org.apache.hadoop:hadoop-common:3.3.6") {
-    exclude("log4j", "log4j")
-  }
+  implementation("org.apache.hadoop:hadoop-common:3.3.6") { exclude("log4j", "log4j") }
 
   // Quarkus + Compile-only dependencies
   compileOnly(libs.jakarta.annotation.api)
