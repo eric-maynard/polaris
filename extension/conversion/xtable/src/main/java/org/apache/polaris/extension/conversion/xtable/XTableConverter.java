@@ -43,6 +43,7 @@ import org.apache.xtable.iceberg.IcebergConversionSourceProvider;
 import org.apache.xtable.model.sync.SyncMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.lang.management.ManagementFactory;
 
 /**
  * A {@link TableConverter} implementation that uses XTable to convert a table locally. Since
@@ -73,6 +74,14 @@ public class XTableConverter implements TableConverter {
   private Configuration newLocalSparkConfiguration() {
     Configuration configuration = new Configuration();
     configuration.set("spark.master", "local[1]");
+    String javaOptions = "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED " +
+        "--add-opens=java.base/java.nio=ALL-UNNAMED " +
+        "--add-opens=java.base/java.lang=ALL-UNNAMED " +
+        "--add-opens=java.base/java.util=ALL-UNNAMED " +
+        "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED " +
+        "-Dio.netty.tryReflectionSetAccessible=true";
+    configuration.set("spark.executor.extraJavaOptions", javaOptions);
+    configuration.set("spark.driver.extraJavaOptions", javaOptions);
     return configuration;
   }
 
@@ -85,6 +94,8 @@ public class XTableConverter implements TableConverter {
     // TODO remove debug printlns
     System.out.println("#### Attempting to convert: " + table);
     System.out.println("#### using java: " + Runtime.version());
+    System.out.println("#### JVM options...");
+    ManagementFactory.getRuntimeMXBean().getInputArguments().forEach(System.out::println);
     String targetLocation = table.getBaseLocation() + "/_" + targetFormat.toString();
     try {
       SourceTable sourceTable =

@@ -43,6 +43,8 @@ dependencies {
     exclude("org.apache.logging.log4j", "log4j-1.2-api")
     exclude("org.apache.logging.log4j", "log4j-core")
     exclude("org.slf4j", "jul-to-slf4j")
+    exclude("org.apache.spark", "spark-sql_2.12")
+    exclude("io.delta", "delta-core_2.12")
   }
 
   // Required for Delta source support
@@ -61,8 +63,8 @@ dependencies {
     exclude("org.slf4j", "jul-to-slf4j")
   }
   implementation("io.delta:delta-spark_${scalaVersion}:3.3.1")
-//
-//  // Re-add log4j
+
+  // Re-add log4j
   implementation("org.apache.logging.log4j:log4j-api")
   implementation("org.apache.logging.log4j:log4j-core")
   implementation("org.apache.logging.log4j:log4j-slf4j2-impl")

@@ -74,6 +74,14 @@ quarkus {
 
 tasks.register("run") { dependsOn("quarkusRun") }
 
+val sparkJvmArgs = listOf(
+  "--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED",
+  "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+  "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+  "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
+  "--add-opens", "java.base/java.util=ALL-UNNAMED"
+)
+
 tasks.named<QuarkusRun>("quarkusRun") {
   jvmArgs =
     listOf(
@@ -82,7 +90,7 @@ tasks.named<QuarkusRun>("quarkusRun") {
       "-Dpolaris.features.\"ALLOW_INSECURE_STORAGE_TYPES\"=true",
       "-Dpolaris.features.\"SUPPORTED_CATALOG_STORAGE_TYPES\"=[\"FILE\",\"S3\",\"GCS\",\"AZURE\"]",
       "-Dpolaris.readiness.ignore-severe-issues=true",
-    )
+    ) + sparkJvmArgs
 }
 
 val quarkusBuild = tasks.named<QuarkusBuild>("quarkusBuild")
