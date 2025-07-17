@@ -72,7 +72,7 @@ public class XTableConverter implements TableConverter {
 
   private Configuration newLocalSparkConfiguration() {
     Configuration configuration = new Configuration();
-    configuration.set("spark.master", "local[*]");
+    configuration.set("spark.master", "local[1]");
     return configuration;
   }
 
