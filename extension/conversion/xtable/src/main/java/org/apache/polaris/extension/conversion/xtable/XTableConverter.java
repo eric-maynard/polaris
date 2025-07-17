@@ -84,6 +84,7 @@ public class XTableConverter implements TableConverter {
       int requestedFreshnessSeconds) {
     // TODO remove debug printlns
     System.out.println("#### Attempting to convert: " + table);
+    System.out.println("#### using java: " + Runtime.version());
     String targetLocation = table.getBaseLocation() + "/_" + targetFormat.toString();
     try {
       SourceTable sourceTable =
