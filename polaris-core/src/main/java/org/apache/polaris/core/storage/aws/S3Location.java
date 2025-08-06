@@ -51,7 +51,7 @@ public class S3Location extends StorageLocation {
   public boolean isChildOf(StorageLocation potentialParent) {
     if (potentialParent instanceof S3Location) {
       S3Location that = (S3Location) potentialParent;
-      // Given that S3 and S3A are to be treated similarly, the parent check ignores the prefix
+      // Given that S3 and S3A are to be treated similarly, the parent check ignores the scheme
       String slashTerminatedObjectKey = ensureTrailingSlash(this.locationWithoutScheme);
       String slashTerminatedObjectKeyThat = ensureTrailingSlash(that.locationWithoutScheme);
       return slashTerminatedObjectKey.startsWith(slashTerminatedObjectKeyThat);
