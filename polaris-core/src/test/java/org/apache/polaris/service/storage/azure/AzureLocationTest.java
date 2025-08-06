@@ -20,64 +20,70 @@ package org.apache.polaris.service.storage.azure;
 
 import org.apache.polaris.core.storage.StorageLocation;
 import org.apache.polaris.core.storage.azure.AzureLocation;
-import org.assertj.core.api.Assertions;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(SoftAssertionsExtension.class)
 public class AzureLocationTest {
+  @InjectSoftAssertions SoftAssertions soft;
 
   @Test
   public void testLocation() {
     String uri = "abfss://container@storageaccount.blob.core.windows.net/myfile";
-    AzureLocation azureLocation = new AzureLocation(uri);
-    Assertions.assertThat(azureLocation.getContainer()).isEqualTo("container");
-    Assertions.assertThat(azureLocation.getStorageAccount()).isEqualTo("storageaccount");
-    Assertions.assertThat(azureLocation.getEndpoint()).isEqualTo("blob.core.windows.net");
-    Assertions.assertThat(azureLocation.getFilePath()).isEqualTo("myfile");
+    StorageLocation storageLocation = StorageLocation.of(uri);
+    AzureLocation azureLocation = (AzureLocation) storageLocation;
+    soft.assertThat(azureLocation.getContainer()).isEqualTo("container");
+    soft.assertThat(azureLocation.getStorageAccount()).isEqualTo("storageaccount");
+    soft.assertThat(azureLocation.getEndpoint()).isEqualTo("blob.core.windows.net");
+    soft.assertThat(azureLocation.getFilePath()).isEqualTo("myfile");
   }
 
   @Test
   public void testWasbLocation() {
     String uri = "wasb://container@storageaccount.blob.core.windows.net/myfile";
-    AzureLocation azureLocation = new AzureLocation(uri);
-    Assertions.assertThat(azureLocation.getContainer()).isEqualTo("container");
-    Assertions.assertThat(azureLocation.getStorageAccount()).isEqualTo("storageaccount");
-    Assertions.assertThat(azureLocation.getEndpoint()).isEqualTo("blob.core.windows.net");
-    Assertions.assertThat(azureLocation.getFilePath()).isEqualTo("myfile");
+    StorageLocation storageLocation = StorageLocation.of(uri);
+    AzureLocation azureLocation = (AzureLocation) storageLocation;
+    soft.assertThat(azureLocation.getContainer()).isEqualTo("container");
+    soft.assertThat(azureLocation.getStorageAccount()).isEqualTo("storageaccount");
+    soft.assertThat(azureLocation.getEndpoint()).isEqualTo("blob.core.windows.net");
+    soft.assertThat(azureLocation.getFilePath()).isEqualTo("myfile");
   }
 
   @Test
   public void testCrossSchemeComparisons() {
     StorageLocation abfsLocation =
-        AzureLocation.of("abfss://container@acc.dev.core.windows.net/some/file/x");
+        StorageLocation.of("abfss://container@acc.dev.core.windows.net/some/file/x");
     StorageLocation wasbLocation =
-        AzureLocation.of("wasb://container@acc.blob.core.windows.net/some/file");
-    Assertions.assertThat(abfsLocation).isNotEqualTo(wasbLocation);
-    Assertions.assertThat(abfsLocation.isChildOf(wasbLocation)).isTrue();
+        StorageLocation.of("wasb://container@acc.blob.core.windows.net/some/file");
+    soft.assertThat(abfsLocation).isNotEqualTo(wasbLocation);
+    soft.assertThat(abfsLocation.isChildOf(wasbLocation)).isTrue();
   }
 
   @Test
   public void testLocationComparisons() {
     StorageLocation location =
-        AzureLocation.of("abfss://container-dash@acc.blob.core.windows.net/some_file/metadata");
+        StorageLocation.of("abfss://container-dash@acc.blob.core.windows.net/some_file/metadata");
     StorageLocation parentLocation =
-        AzureLocation.of("abfss://container-dash@acc.blob.core.windows.net");
+        StorageLocation.of("abfss://container-dash@acc.blob.core.windows.net");
     StorageLocation parentLocationTrailingSlash =
-        AzureLocation.of("abfss://container-dash@acc.blob.core.windows.net/");
+        StorageLocation.of("abfss://container-dash@acc.blob.core.windows.net/");
 
-    Assertions.assertThat(location).isNotEqualTo(parentLocation);
-    Assertions.assertThat(location).isNotEqualTo(parentLocationTrailingSlash);
+    soft.assertThat(location).isNotEqualTo(parentLocation);
+    soft.assertThat(location).isNotEqualTo(parentLocationTrailingSlash);
 
-    Assertions.assertThat(location.isChildOf(parentLocation)).isTrue();
-    Assertions.assertThat(location.isChildOf(parentLocationTrailingSlash)).isTrue();
+    soft.assertThat(location.isChildOf(parentLocation)).isTrue();
+    soft.assertThat(location.isChildOf(parentLocationTrailingSlash)).isTrue();
   }
 
   @Test
   public void testLocation_negative_cases() {
-    Assertions.assertThatThrownBy(
-            () -> new AzureLocation("abfss://storageaccount.blob.core.windows.net/myfile"))
+    soft.assertThatThrownBy(
+            () -> StorageLocation.of("abfss://storageaccount.blob.core.windows.net/myfile"))
         .isInstanceOf(IllegalArgumentException.class);
-    Assertions.assertThatThrownBy(
-            () -> new AzureLocation("abfss://container@storageaccount/myfile"))
+    soft.assertThatThrownBy(() -> StorageLocation.of("abfss://container@storageaccount/myfile"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

@@ -18,94 +18,136 @@
  */
 package org.apache.polaris.core.storage;
 
+import java.util.Arrays;
 import java.util.Map;
 import org.apache.polaris.core.entity.table.IcebergTableLikeEntity;
-import org.assertj.core.api.Assertions;
+import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.api.junit.jupiter.InjectSoftAssertions;
+import org.assertj.core.api.junit.jupiter.SoftAssertionsExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@ExtendWith(SoftAssertionsExtension.class)
 public class StorageUtilTest {
+  @InjectSoftAssertions SoftAssertions soft;
 
   @Test
   public void testEmptyString() {
-    Assertions.assertThat(StorageUtil.getBucket("")).isNull();
+    soft.assertThat(StorageUtil.getBucket("")).isNull();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"s3", "s3a", "gcs", "abfs", "wasb", "file"})
   public void testAbsolutePaths(String scheme) {
-    Assertions.assertThat(StorageUtil.getBucket(scheme + "://bucket/path/file.txt"))
-        .isEqualTo("bucket");
-    Assertions.assertThat(StorageUtil.getBucket(scheme + "://bucket:with:colon/path/file.txt"))
+    soft.assertThat(StorageUtil.getBucket(scheme + "://bucket/path/file.txt")).isEqualTo("bucket");
+    soft.assertThat(StorageUtil.getBucket(scheme + "://bucket:with:colon/path/file.txt"))
         .isEqualTo("bucket:with:colon");
-    Assertions.assertThat(StorageUtil.getBucket(scheme + "://bucket_with_underscore/path/file.txt"))
+    soft.assertThat(StorageUtil.getBucket(scheme + "://bucket_with_underscore/path/file.txt"))
         .isEqualTo("bucket_with_underscore");
-    Assertions.assertThat(StorageUtil.getBucket(scheme + "://bucket_with_ユニコード/path/file.txt"))
+    soft.assertThat(StorageUtil.getBucket(scheme + "://bucket_with_ユニコード/path/file.txt"))
         .isEqualTo("bucket_with_ユニコード");
   }
 
   @Test
   public void testRelativePaths() {
-    Assertions.assertThat(StorageUtil.getBucket("bucket/path/file.txt")).isNull();
-    Assertions.assertThat(StorageUtil.getBucket("path/file.txt")).isNull();
+    soft.assertThat(StorageUtil.getBucket("bucket/path/file.txt")).isNull();
+    soft.assertThat(StorageUtil.getBucket("path/file.txt")).isNull();
   }
 
   @Test
   public void testAbsolutePathWithoutScheme() {
-    Assertions.assertThat(StorageUtil.getBucket("/bucket/path/file.txt")).isNull();
+    soft.assertThat(StorageUtil.getBucket("/bucket/path/file.txt")).isNull();
   }
 
   @Test
   public void testInvalidURI() {
-    Assertions.assertThatThrownBy(
-            () -> StorageUtil.getBucket("s3://bucket with space/path/file.txt"))
+    soft.assertThatThrownBy(() -> StorageUtil.getBucket("s3://bucket with space/path/file.txt"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   public void testAuthorityWithPort() {
-    Assertions.assertThat(StorageUtil.getBucket("s3://bucket:8080/path/file.txt"))
+    soft.assertThat(StorageUtil.getBucket("s3://bucket:8080/path/file.txt"))
         .isEqualTo("bucket:8080");
   }
 
   @Test
   public void getLocationsAllowedToBeAccessed() {
-    Assertions.assertThat(StorageUtil.getLocationsAllowedToBeAccessed(null, Map.of())).isEmpty();
-    Assertions.assertThat(StorageUtil.getLocationsAllowedToBeAccessed("", Map.of())).isNotEmpty();
-    Assertions.assertThat(StorageUtil.getLocationsAllowedToBeAccessed("/foo/", Map.of()))
-        .contains("/foo/");
-    Assertions.assertThat(
+    soft.assertThat(StorageUtil.getLocationsAllowedToBeAccessed(null, Map.of())).isEmpty();
+    soft.assertThat(StorageUtil.getLocationsAllowedToBeAccessed("", Map.of())).isNotEmpty();
+    soft.assertThat(StorageUtil.getLocationsAllowedToBeAccessed("/foo/", Map.of()))
+        .containsExactlyInAnyOrder("/foo/");
+    soft.assertThat(
             StorageUtil.getLocationsAllowedToBeAccessed(
                 "/foo/",
                 Map.of(IcebergTableLikeEntity.USER_SPECIFIED_WRITE_DATA_LOCATION_KEY, "/foo/")))
-        .contains("/foo/");
-    Assertions.assertThat(
+        .containsExactlyInAnyOrder("/foo/");
+    soft.assertThat(
             StorageUtil.getLocationsAllowedToBeAccessed(
                 "/foo/",
                 Map.of(IcebergTableLikeEntity.USER_SPECIFIED_WRITE_DATA_LOCATION_KEY, "/bar/")))
-        .contains("/foo/", "/bar/");
-    Assertions.assertThat(
+        .containsExactlyInAnyOrder("/foo/", "/bar/");
+    soft.assertThat(
             StorageUtil.getLocationsAllowedToBeAccessed(
                 "/foo/",
                 Map.of(IcebergTableLikeEntity.USER_SPECIFIED_WRITE_DATA_LOCATION_KEY, "/foo/bar/")))
-        .contains("/foo/");
-    Assertions.assertThat(
+        .containsExactlyInAnyOrder("/foo/");
+    soft.assertThat(
             StorageUtil.getLocationsAllowedToBeAccessed(
                 "/foo/bar/",
                 Map.of(IcebergTableLikeEntity.USER_SPECIFIED_WRITE_DATA_LOCATION_KEY, "/foo/")))
-        .contains("/foo/");
-    Assertions.assertThat(
+        .containsExactlyInAnyOrder("/foo/");
+    soft.assertThat(
             StorageUtil.getLocationsAllowedToBeAccessed(
                 "/foo/bar/",
                 Map.of(IcebergTableLikeEntity.USER_SPECIFIED_WRITE_METADATA_LOCATION_KEY, "/foo/")))
-        .contains("/foo/");
-    Assertions.assertThat(
+        .containsExactlyInAnyOrder("/foo/");
+    soft.assertThat(
             StorageUtil.getLocationsAllowedToBeAccessed(
                 "/1/",
                 Map.of(
                     IcebergTableLikeEntity.USER_SPECIFIED_WRITE_DATA_LOCATION_KEY, "/2/",
                     IcebergTableLikeEntity.USER_SPECIFIED_WRITE_METADATA_LOCATION_KEY, "/3/")))
-        .contains("/1/", "/2/", "/3/");
+        .containsExactlyInAnyOrder("/1/", "/2/", "/3/");
+  }
+
+  @Test
+  public void removeRedundantLocations() {
+    soft.assertThat(
+            StorageUtil.removeRedundantLocations(
+                Arrays.asList(
+                    "", // yielded
+                    //
+                    "s3://foo/bar/baz/",
+                    "s3://foo/bar/baz",
+                    "gs://foo/bar/baz/", // yielded
+                    "s3://foo/bar/", // yielded
+                    "s3://foo/bar/",
+                    "gs://bar/baz/foo/blah",
+                    "gs://bar/baz/fooblah", // yielded
+                    "gs://bar/baz/foo", // yielded
+                    //
+                    null,
+                    //
+                    "abfs://foo:bar@host.domain/path/here", // yielded
+                    "abfss://foo:bar@host.domain/path/here",
+                    "wasb://foo:bar@host.domain/path/here",
+                    "wasbs://foo:bar@host.domain/path/here",
+                    //
+                    "abfs://other:foo@host.domain/path/here", // yielded
+                    //
+                    "wasbs://other:foo@somwhere.else/path/here" // yielded
+                    )))
+        .containsExactlyInAnyOrder(
+            "",
+            "gs://foo/bar/baz/",
+            "s3://foo/bar/",
+            "abfs://foo:bar@host.domain/path/here",
+            "abfs://other:foo@host.domain/path/here",
+            "gs://bar/baz/fooblah",
+            "gs://bar/baz/foo",
+            "wasbs://other:foo@somwhere.else/path/here");
   }
 }

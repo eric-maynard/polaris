@@ -44,24 +44,29 @@ public class StorageLocation {
     } else if (S3Location.isS3Location(location)) {
       return new S3Location(location);
     } else {
-      return new StorageLocation(location);
+      return new StorageLocation(fixLocation(location));
     }
   }
 
-  protected StorageLocation(@Nonnull String location) {
+  static String fixLocation(String location) {
     if (location == null) {
-      this.location = null;
-    } else if (location.startsWith("file:/")) {
-      this.location = URI.create(location.replaceFirst("file:/+", LOCAL_PATH_PREFIX)).toString();
-    } else if (location.startsWith("/")) {
-      this.location = URI.create(location.replaceFirst("/+", LOCAL_PATH_PREFIX)).toString();
-    } else {
-      this.location = location;
+      return null;
     }
+    if (location.startsWith("file:/")) {
+      return URI.create(location.replaceFirst("file:/+", LOCAL_PATH_PREFIX)).toString();
+    }
+    if (location.startsWith("/")) {
+      return URI.create(location.replaceFirst("/+", LOCAL_PATH_PREFIX)).toString();
+    }
+    return location;
+  }
+
+  protected StorageLocation(String location) {
+    this.location = location;
   }
 
   /** If a path doesn't end in `/`, this will add one */
-  protected final String ensureTrailingSlash(String location) {
+  protected static String ensureTrailingSlash(String location) {
     if (location == null || location.endsWith("/")) {
       return location;
     } else {
@@ -70,7 +75,7 @@ public class StorageLocation {
   }
 
   /** If a path doesn't start with `/`, this will add one */
-  protected final @Nonnull String ensureLeadingSlash(@Nonnull String location) {
+  protected static @Nonnull String ensureLeadingSlash(@Nonnull String location) {
     if (location.startsWith("/")) {
       return location;
     } else {
@@ -99,7 +104,12 @@ public class StorageLocation {
 
   /**
    * Returns true if this StorageLocation's location string starts with the other StorageLocation's
-   * location string
+   * location string.
+   *
+   * <p>Must be overridden by subclasses.
+   *
+   * <p>The default implementation considers the whole location string, including the scheme, S3 and
+   * Azure storage locations ignore the scheme.
    */
   public boolean isChildOf(StorageLocation potentialParent) {
     if (this.location == null || potentialParent.location == null) {
@@ -111,7 +121,11 @@ public class StorageLocation {
     }
   }
 
-  /** Returns a string representation of the location but without a scheme */
+  /**
+   * Returns a string representation of the location but without a scheme.
+   *
+   * <p>Must be overridden by subclasses.
+   */
   public String withoutScheme() {
     if (location == null) {
       return null;
