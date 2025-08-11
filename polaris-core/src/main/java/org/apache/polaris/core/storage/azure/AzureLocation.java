@@ -88,7 +88,7 @@ public class AzureLocation extends StorageLocation {
     return endpoint;
   }
 
-  /** Get the file path */
+  /** Get the file path, without a leading {@code /}. */
   public String getFilePath() {
     return filePath;
   }
