@@ -52,7 +52,8 @@ public class TaskFileIOSupplier implements BiFunction<TaskEntity, CallContext, F
     Map<String, String> internalProperties = task.getInternalPropertiesAsMap();
     Map<String, String> properties = new HashMap<>(internalProperties);
 
-    IcebergTableLikeEntity tableEntity = IcebergTableLikeEntity.of(task.readData(PolarisBaseEntity.class));
+    IcebergTableLikeEntity tableEntity =
+        IcebergTableLikeEntity.of(task.readData(PolarisBaseEntity.class));
     TableIdentifier identifier = tableEntity.getTableIdentifier();
     String location = properties.get(PolarisTaskConstants.STORAGE_LOCATION);
     Set<String> locations = Set.of(location);
